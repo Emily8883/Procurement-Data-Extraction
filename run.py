@@ -1,3 +1,5 @@
+import json
+import sys
 import pdfplumber
 import pandas as pd
 import re
@@ -203,7 +205,7 @@ def extract_from_pdfs(pdf_folder='pdfs'):
         print(f"Processing: {pdf_file.name}")
         
         try:
-            items = extract_procurement_data(str(pdf_file))
+            items = extract_procurement_data_hybrid(str(pdf_file))
             all_items.extend(items)
             print(f"  ✓ Extracted {len(items)} items")
         
@@ -216,8 +218,9 @@ def extract_from_pdfs(pdf_folder='pdfs'):
 # New pipeline orchestration: extraction -> normalization -> matching -> export
 from supplier_matching import SupplierMatcher
 from price_estimation import PriceEstimator
-from pipeline_extraction.enhanced_pdf_extractor import extract_procurement_data
+from pipeline_extraction.hybrid_procurement_extractor import extract_procurement_data_hybrid
 from pipeline_validation.data_quality_validator import validate_pipeline_output
+from pipeline_validation.extraction_diagnostics import generate_extraction_diagnostics
 
 
 def normalize_item(raw_item: dict) -> dict:
@@ -283,13 +286,33 @@ def export_results(final_items: list, output_dir: Path = Path('output')) -> None
     print(f"✓ Exported Excel: {xlsx_path}")
 
 
-def run_pipeline(pdf_folder: str = 'pdfs') -> list:
+def run_pipeline(pdf_folder: str = 'pdfs', debug: bool = False) -> list:
     print('\nStarting full extraction pipeline')
     print('=' * 60)
 
     # 1) Extraction (existing extractor)
     extracted = extract_from_pdfs(pdf_folder)
     print(f"Extracted raw items: {len(extracted)}")
+
+    if debug:
+        print('\nDEBUG MODE: Extraction output per PDF')
+        for pdf_file in sorted(Path(pdf_folder).glob('*.pdf')):
+            records = extract_procurement_data_hybrid(str(pdf_file))
+            print(f"\nPDF: {pdf_file.name}")
+            print(f"  Total extracted records: {len(records)}")
+            for sample in records[:2]:
+                print('  Sample record:')
+                print(json.dumps(sample, ensure_ascii=False, indent=2))
+            print('  ...')
+
+            diagnostics = generate_extraction_diagnostics(str(pdf_file), records)
+            print('  Diagnostic summary:')
+            print(f"    issue: {diagnostics['issue']}")
+            print(f"    missing supplier_name: {diagnostics['missing_supplier_name_pct']}%")
+            print(f"    missing unit_price: {diagnostics['missing_unit_price_pct']}%")
+            print(f"    missing currency: {diagnostics['missing_currency_pct']}%")
+            print(f"    missing invoice_or_po_number: {diagnostics['missing_invoice_or_po_number_pct']}%")
+            print(f"    tables found: {diagnostics['tables_found']} (pages {diagnostics['pages_with_tables']}/{diagnostics['total_pages']})")
 
     # 2) Normalization
     normalized = [normalize_item(it) for it in extracted]
@@ -338,5 +361,6 @@ def run_pipeline(pdf_folder: str = 'pdfs') -> list:
 
 
 if __name__ == '__main__':
-    final = run_pipeline('pdfs')
+    debug_mode = '--debug' in sys.argv or '-d' in sys.argv
+    final = run_pipeline('pdfs', debug=debug_mode)
     print('\nPipeline complete. Items processed:', len(final))

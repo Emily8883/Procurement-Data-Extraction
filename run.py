@@ -192,7 +192,7 @@ def extract_procurement_items_from_pdf(pdf_path):
     return items
 
 
-def extract_from_pdfs(pdf_folder='pdfs'):
+def extract_from_pdfs(pdf_folder='pdfs', debug: bool = False):
     """Extract procurement data from all PDFs in folder."""
     
     all_items = []
@@ -205,12 +205,13 @@ def extract_from_pdfs(pdf_folder='pdfs'):
         print(f"Processing: {pdf_file.name}")
         
         try:
-            items = extract_procurement_data_hybrid(str(pdf_file))
+            items = extract_procurement_data_hybrid(str(pdf_file), debug=debug)
             all_items.extend(items)
             print(f"  ✓ Extracted {len(items)} items")
-        
         except Exception as e:
             print(f"  ✗ Error: {str(e)}")
+            print("  PDF failed but pipeline continues")
+            continue
     
     return all_items
 
@@ -291,13 +292,13 @@ def run_pipeline(pdf_folder: str = 'pdfs', debug: bool = False) -> list:
     print('=' * 60)
 
     # 1) Extraction (existing extractor)
-    extracted = extract_from_pdfs(pdf_folder)
+    extracted = extract_from_pdfs(pdf_folder, debug=debug)
     print(f"Extracted raw items: {len(extracted)}")
 
     if debug:
         print('\nDEBUG MODE: Extraction output per PDF')
         for pdf_file in sorted(Path(pdf_folder).glob('*.pdf')):
-            records = extract_procurement_data_hybrid(str(pdf_file))
+            records = extract_procurement_data_hybrid(str(pdf_file), debug=True)
             print(f"\nPDF: {pdf_file.name}")
             print(f"  Total extracted records: {len(records)}")
             for sample in records[:2]:

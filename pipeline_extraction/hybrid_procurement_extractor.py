@@ -7,6 +7,8 @@ import pdfplumber
 from .document_context_builder import build_document_context
 from .table_schema_inference import infer_table_schema, map_row_cells, is_header_row
 from .row_alignment_corrector import correct_row_alignment
+from .utils.safe_parsing import safe_float
+from .value_field_scorer import score_and_extract_fields
 
 try:
     import pytesseract
@@ -224,6 +226,72 @@ def _pick_price(row: List[str]) -> str:
             return cell
     return ''
 
+def _is_numeric_only(value: str) -> bool:
+    normalized = _normalize_text(value)
+    cleaned = re.sub(r'[^0-9.,]', '', normalized)
+    return bool(cleaned) and cleaned == normalized
+
+
+def _get_column_map(schema: Dict[str, Any]) -> Dict[str, int]:
+    if not isinstance(schema, dict):
+        return {}
+    column_map = schema.get('column_map') or schema.get('col_index_map') or {}
+    if not isinstance(column_map, dict):
+        return {}
+    return column_map
+
+
+def _parse_row_with_schema(
+    row_cells: List[str],
+    schema: Dict[str, Any],
+    context: Dict[str, Any],
+    debug: bool = False
+) -> Dict[str, str]:
+    column_map = _get_column_map(schema)
+    mapped: Dict[str, str] = {
+        'description': '',
+        'quantity': '',
+        'unit_price': '',
+        'total_amount': ''
+    }
+
+    if column_map:
+        if debug:
+            print('[SCORE DEBUG] column mapping applied')
+
+        for field in mapped.keys():
+            idx = column_map.get(field)
+            if isinstance(idx, int) and 0 <= idx < len(row_cells):
+                mapped[field] = _normalize_text(row_cells[idx])
+
+        if mapped['description'] and _is_numeric_only(mapped['description']):
+            mapped['description'] = ''
+
+    if not all(mapped.values()):
+        scored = score_and_extract_fields(row_cells, context, debug=debug)
+        for field in mapped.keys():
+            if not mapped[field]:
+                mapped[field] = scored.get(field, '')
+
+    numeric_cells = [safe_float(re.sub(r'[^0-9.,]', '', _normalize_text(cell))) for cell in row_cells]
+    numeric_candidates = [value for value in numeric_cells if value > 0]
+    if len(numeric_candidates) > 1:
+        viable = [value for value in numeric_candidates if 1 <= value <= 10000]
+        if viable:
+            if mapped['quantity']:
+                qty = safe_float(re.sub(r'[^0-9.,]', '', mapped['quantity']))
+                if not (1 <= qty <= 10000):
+                    mapped['quantity'] = str(min(viable))
+            if mapped['unit_price']:
+                price = safe_float(re.sub(r'[^0-9.,]', '', mapped['unit_price']))
+                if not (1 <= price <= 10000):
+                    mapped['unit_price'] = str(sorted(viable)[len(viable) // 2])
+            if mapped['total_amount']:
+                total = safe_float(re.sub(r'[^0-9.,]', '', mapped['total_amount']))
+                if not (1 <= total <= 10000):
+                    mapped['total_amount'] = str(max(viable))
+
+    return mapped
 
 def _parse_mapped_table_record(mapped: Dict[str, str], context: Dict[str, Any], source_page: int, pdf_name: str, row: List[str]) -> Dict[str, Any]:
     description = mapped.get('description', '')
@@ -288,7 +356,7 @@ def default_safe_schema() -> Dict[str, Any]:
     }
 
 
-def extract_procurement_data_hybrid(pdf_path: str) -> List[Dict[str, Any]]:
+def extract_procurement_data_hybrid(pdf_path: str, debug: bool = False) -> List[Dict[str, Any]]:
     pdf_path = Path(pdf_path)
     records: List[Dict[str, Any]] = []
     context = build_document_context(str(pdf_path))
@@ -313,9 +381,8 @@ def extract_procurement_data_hybrid(pdf_path: str) -> List[Dict[str, Any]]:
                 for row in table_rows:
                     if is_header_row(row):
                         continue
-                    # Use row-level alignment correction instead of simple schema mapping
-                    mapped = correct_row_alignment(row, schema, context)
-                    if not mapped.get('description') and not mapped.get('quantity') and not mapped.get('unit_price'):
+                    mapped = _parse_row_with_schema(row, schema, context, debug=debug)
+                    if not mapped.get('description') and not mapped.get('quantity') and not mapped.get('unit_price') and not mapped.get('total_amount'):
                         continue
                     records.append(_parse_mapped_table_record(mapped, context, page_num, pdf_path.name, row))
             else:

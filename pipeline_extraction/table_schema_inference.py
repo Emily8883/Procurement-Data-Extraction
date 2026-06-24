@@ -1,6 +1,8 @@
+import logging
 import re
 from typing import List, Dict, Any
-from .utils.safe_parsing import safe_float
+
+logger = logging.getLogger(__name__)
 
 HEADER_LABELS = ['DESCRIPCIÓN', 'CANT', 'CANT.', 'QTY', 'QUANTITY', 'UNIT PRICE', 'PRICE', 'TOTAL', 'AMOUNT', 'ITEM', 'ÍTEM', 'MEDIDA', 'DESCRIPTION', 'UNIT', 'CURRENCY']
 CURRENCY_SYMBOLS = ['$', '£', '€', '¥']
@@ -53,6 +55,55 @@ def _is_quantity(cell: str) -> bool:
 
 def _text_score(cell: str) -> int:
     return len(cell.strip())
+
+
+def _safe_parse_numeric(value: str) -> float:
+    """Safely parse a numeric value and skip malformed OCR numbers."""
+    if not value:
+        return 0.0
+
+    original = value
+    cleaned = re.sub(r'[^0-9.,]', '', value)
+    if not cleaned:
+        return 0.0
+
+    # Extract candidate numeric tokens
+    tokens = re.findall(r'\d+(?:[.,]\d+)*', cleaned)
+    for token in tokens:
+        if re.search(r'[.,]{2,}', token):
+            continue
+        
+        if token.count('.') > 1 and token.count(',') == 0:
+            continue
+        
+        normalized = token
+        try:
+            if '.' in token and ',' in token:
+                last_dot = token.rfind('.')
+                last_comma = token.rfind(',')
+                if last_dot > last_comma:
+                    normalized = token.replace(',', '')
+                else:
+                    normalized = token.replace('.', '').replace(',', '.')
+            elif token.count(',') > 1 and token.count('.') == 0:
+                parts = token.split(',')
+                if all(len(part) == 3 for part in parts[1:]):
+                    normalized = ''.join(parts[:-1]) + '.' + parts[-1]
+                else:
+                    continue
+            else:
+                normalized = token.replace(',', '.')
+
+            if normalized.count('.') > 1:
+                continue
+
+            return float(normalized)
+        except Exception:
+            continue
+
+    if re.search(r'[0-9]', cleaned):
+        logger.warning(f"Skipped malformed numeric value: '{original}' cleaned='{cleaned}'")
+    return 0.0
 
 
 def _is_ocr_garbage(cell: str) -> bool:
@@ -134,7 +185,7 @@ def infer_table_schema(rows: List[List[str]]) -> Dict[str, Any]:
                     if _is_price(normalized):
                         stats[idx]['price_count'] += 1
                         stats[idx]['currency_count'] += 1 if _has_currency(normalized) else 0
-                        value = safe_float(re.sub(r'[^0-9.,]', '', normalized)) if re.search(r'[0-9]', normalized) else 0.0
+                        value = _safe_parse_numeric(normalized) if re.search(r'[0-9]', normalized) else 0.0
                         stats[idx]['max_price_value'] = max(stats[idx]['max_price_value'], value)
                     if _is_quantity(normalized):
                         stats[idx]['quantity_count'] += 1

@@ -1,5 +1,7 @@
 from typing import List, Dict, Any
 
+from .record_validator import validate_record
+
 REQUIRED_FIELDS = [
     'supplier_name',
     'invoice_or_po_number',
@@ -66,9 +68,11 @@ def validate_pipeline_output(records: List[Dict[str, Any]]) -> Dict[str, Any]:
         else:
             report['invalid_records'] += 1
 
+        validation = validate_record(record)
         record_copy = dict(record)
         record_copy['quality_classification'] = classification
         record_copy['missing_fields'] = missing_fields
+        record_copy['record_validation'] = validation
         report['records'].append(record_copy)
 
     total_possible_fields = report['total_records'] * len(REQUIRED_FIELDS)

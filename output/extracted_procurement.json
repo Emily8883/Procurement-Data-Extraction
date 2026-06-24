@@ -1,0 +1,272 @@
+[
+  {
+    "document_name": "00c4e05f2d8e31c0-Copy.pdf",
+    "document_type": "scanned",
+    "supplier": "",
+    "invoice_or_po_number": "",
+    "issue_date": "",
+    "currency": "",
+    "line_items": [],
+    "subtotal": "",
+    "tax": "",
+    "total_amount": "",
+    "confidence_score": 0,
+    "missing_fields": [
+      "supplier",
+      "invoice_or_po_number",
+      "issue_date",
+      "currency",
+      "line_items",
+      "subtotal",
+      "tax",
+      "total_amount"
+    ],
+    "extraction_method": "ocr_engine"
+  },
+  {
+    "document_name": "00c4e05f2d8e31c0.pdf",
+    "document_type": "scanned",
+    "supplier": "",
+    "invoice_or_po_number": "",
+    "issue_date": "",
+    "currency": "",
+    "line_items": [],
+    "subtotal": "",
+    "tax": "",
+    "total_amount": "",
+    "confidence_score": 0,
+    "missing_fields": [
+      "supplier",
+      "invoice_or_po_number",
+      "issue_date",
+      "currency",
+      "line_items",
+      "subtotal",
+      "tax",
+      "total_amount"
+    ],
+    "extraction_method": "ocr_engine"
+  },
+  {
+    "document_name": "0c2f9fc842a866ee.pdf",
+    "document_type": "text",
+    "supplier": "Y SU PERSONAL",
+    "invoice_or_po_number": "rtunidades",
+    "issue_date": "",
+    "currency": "del",
+    "line_items": [
+      {
+        "description": " Por Ordenanza Nº 2537 del 14 de abril del 2023, se aprueba el Reglamento de Organización y",
+        "quantity": "2537",
+        "unit_price": "",
+        "total_price": ""
+      },
+      {
+        "description": " El Artículo 93 del Reglamento de Operación y Funciones – ROF de la Municipalidad Metropolitana",
+        "quantity": "93",
+        "unit_price": "",
+        "total_price": ""
+      },
+      {
+        "description": " El Artículo 96 del Reglamento de Operación y Funciones – ROF de la Municipalidad Metropolitana",
+        "quantity": "96",
+        "unit_price": "",
+        "total_price": ""
+      },
+      {
+        "description": "1 S600100040138 SERVICIO 01",
+        "quantity": "1",
+        "unit_price": "",
+        "total_price": ""
+      },
+      {
+        "description": "• Limpieza de 80 ml. de canaleta de lluvia con la eliminación de la tierra o cualquier otro elemento",
+        "quantity": "80",
+        "unit_price": "",
+        "total_price": ""
+      },
+      {
+        "description": "tipo TI 1107mm. x 11.80 ml.), que se encuentre filtrando agua.",
+        "quantity": "11.80",
+        "unit_price": "11.80",
+        "total_price": ""
+      },
+      {
+        "description": "Av. Inca Garcilaso de la Vega 1348 – 4° piso - Lima",
+        "quantity": "1348",
+        "unit_price": "",
+        "total_price": ""
+      },
+      {
+        "description": "1 | S600100040138 | MANTENIMIENTO CORRECTIVO DE",
+        "quantity": "1",
+        "unit_price": "",
+        "total_price": ""
+      },
+      {
+        "description": "CANALETAS Y COBERTURA DE TECHOS | SERVICIO |  |  | 01",
+        "quantity": "01",
+        "unit_price": "",
+        "total_price": ""
+      },
+      {
+        "description": "Calaminon tipo TI 1107mm. x 11.80 ml.), a ambos lados de la canaleta, encausando el agua de",
+        "quantity": "11.80",
+        "unit_price": "11.80",
+        "total_price": ""
+      },
+      {
+        "description": "una altura de 25 m. aproximadamente. Además de contar con un prevencionista de riesgo a",
+        "quantity": "25",
+        "unit_price": "",
+        "total_price": ""
+      },
+      {
+        "description": "29783 de Seguridad y Salud en el Trabajo y demás disposiciones vigentes para brindar el",
+        "quantity": "29783",
+        "unit_price": "",
+        "total_price": ""
+      },
+      {
+        "description": "El servicio se ejecutara entre las 07:00 horas hasta las 22:00 horas, previa coordinación",
+        "quantity": "00",
+        "unit_price": "",
+        "total_price": ""
+      },
+      {
+        "description": "acumulado equivalente a S/ 10 000.00 (Diez mil con 00/100 soles), mediante copia simple de",
+        "quantity": "10",
+        "unit_price": "000.00",
+        "total_price": ""
+      },
+      {
+        "description": "*Nota: Se precisa que de no presentar la documentación de los numerales 5.1 y 5.2, no será válida su",
+        "quantity": "5.1",
+        "unit_price": "",
+        "total_price": ""
+      }
+    ],
+    "subtotal": "",
+    "tax": "",
+    "total_amount": "",
+    "confidence_score": 45,
+    "missing_fields": [
+      "issue_date",
+      "subtotal",
+      "tax",
+      "total_amount"
+    ],
+    "extraction_method": "text_parser"
+  },
+  {
+    "document_name": "0cca4ed1c20922e1.pdf",
+    "document_type": "text",
+    "supplier": "DEL BIEN",
+    "invoice_or_po_number": "LICARBONATO",
+    "issue_date": "",
+    "currency": "LED",
+    "line_items": [
+      {
+        "description": "La adquisición de SEMÁFORO LED DE TRÁFICO 1 X 12 in, para la Subgerencia de Gestión",
+        "quantity": "1",
+        "unit_price": "",
+        "total_price": ""
+      },
+      {
+        "description": "La adquisición del SEMÁFORO LED DE TRÁFICO 1 X 12 in, servirá para brindar el",
+        "quantity": "1",
+        "unit_price": "",
+        "total_price": ""
+      },
+      {
+        "description": "01 SEMÁFORO LED DE TRÁFICO 1 X 12 in DE POLICARBONATO 45 UND.",
+        "quantity": "01",
+        "unit_price": "",
+        "total_price": ""
+      },
+      {
+        "description": " Las unidades ópticas para semáforos ciclistas tendrán un diámetro nominal de 300 mm",
+        "quantity": "300",
+        "unit_price": "",
+        "total_price": ""
+      },
+      {
+        "description": " El periodo del reloj interno del semáforo contador regresivo será de T=0.01666667",
+        "quantity": "0.01666667",
+        "unit_price": "0.01",
+        "total_price": ""
+      },
+      {
+        "description": " Los rangos de temperatura de trabajo estarán entre 0º C y 75 ºC, además la sección del",
+        "quantity": "75",
+        "unit_price": "",
+        "total_price": ""
+      },
+      {
+        "description": "cable eléctrico interno (de fábrica) no será menor de 0.75mm2 (18AWG).",
+        "quantity": "2",
+        "unit_price": "0.75",
+        "total_price": ""
+      },
+      {
+        "description": "electromagnética EN 50293:2012 o equivalente, asegurándose la inmunidad del",
+        "quantity": "2012",
+        "unit_price": "",
+        "total_price": ""
+      },
+      {
+        "description": "01 |  |  | SEMÁFORO LED DE TRÁFICO 1 X 12 in DE POLICARBONATO |  |  | 45 |  |  | UND. |  |",
+        "quantity": "01",
+        "unit_price": "",
+        "total_price": ""
+      },
+      {
+        "description": "establecidas por la Norma Europea: EN 12368- 2006 o equivalente, donde se definirán",
+        "quantity": "2006",
+        "unit_price": "",
+        "total_price": ""
+      },
+      {
+        "description": "las zonas admitidas para cada color en el diagrama cromático de la CIE1931 RGB",
+        "quantity": "1931",
+        "unit_price": "",
+        "total_price": ""
+      },
+      {
+        "description": " Debe cumplir con las normas IPC 610 (Aceptabilidad de Ensambles Electrónicos), IPC JSTD",
+        "quantity": "610",
+        "unit_price": "",
+        "total_price": ""
+      },
+      {
+        "description": "001 (soldadura y ensambles electrónicos), IPC 600 (Aceptabilidad de Circuitos Impresos) y",
+        "quantity": "001",
+        "unit_price": "",
+        "total_price": ""
+      },
+      {
+        "description": "la norma de resistencia al fuego UL94 HV o V0 o normas equivalentes que comprueben la",
+        "quantity": "94",
+        "unit_price": "",
+        "total_price": ""
+      },
+      {
+        "description": " Año de fabricación: Mínimo 2022",
+        "quantity": "2022",
+        "unit_price": "",
+        "total_price": ""
+      }
+    ],
+    "subtotal": "",
+    "tax": "",
+    "total_amount": "",
+    "confidence_score": 45,
+    "missing_fields": [
+      "issue_date",
+      "subtotal",
+      "tax",
+      "total_amount"
+    ],
+    "extraction_method": "text_parser"
+  }
+]

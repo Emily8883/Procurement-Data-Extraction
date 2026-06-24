@@ -1,0 +1,42 @@
+[
+  {
+    "document_name": "00c4e05f2d8e31c0-Copy.pdf",
+    "document_type": "scanned",
+    "extraction_method": "ocr_engine",
+    "classification_confidence": "HIGH",
+    "file_size_mb": 2.943692207336426,
+    "text_ratio": 0.0,
+    "image_ratio": 1.0,
+    "mixed_ratio": 0.0
+  },
+  {
+    "document_name": "00c4e05f2d8e31c0.pdf",
+    "document_type": "scanned",
+    "extraction_method": "ocr_engine",
+    "classification_confidence": "HIGH",
+    "file_size_mb": 2.945158004760742,
+    "text_ratio": 0.0,
+    "image_ratio": 1.0,
+    "mixed_ratio": 0.0
+  },
+  {
+    "document_name": "0c2f9fc842a866ee.pdf",
+    "document_type": "text",
+    "extraction_method": "text_parser",
+    "classification_confidence": "HIGH",
+    "file_size_mb": 0.8630733489990234,
+    "text_ratio": 1.0,
+    "image_ratio": 0.0,
+    "mixed_ratio": 0.0
+  },
+  {
+    "document_name": "0cca4ed1c20922e1.pdf",
+    "document_type": "text",
+    "extraction_method": "text_parser",
+    "classification_confidence": "HIGH",
+    "file_size_mb": 0.6886768341064453,
+    "text_ratio": 1.0,
+    "image_ratio": 0.0,
+    "mixed_ratio": 0.0
+  }
+]

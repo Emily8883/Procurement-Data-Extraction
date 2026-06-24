@@ -1,0 +1,200 @@
+{
+  "description": "Deterministic validation rules for procurement pipeline",
+  "version": "1.0",
+  "last_updated": "2026-06-24",
+  
+  "procurement_pipeline": {
+    "name": "Procurement/Invoice Pipeline",
+    "description": "Validation rules for invoices and purchase orders",
+    "document_types": ["invoice", "purchase_order", "po"],
+    
+    "field_completeness": {
+      "critical_fields": [
+        "supplier",
+        "invoice_or_po_number",
+        "issue_date",
+        "total_amount"
+      ],
+      "required_presence": "all",
+      "enforcement": "STRICT"
+    },
+    
+    "math_validation": {
+      "enabled": true,
+      "checks": [
+        {
+          "name": "subtotal_tax_total",
+          "formula": "subtotal + tax ≈ total_amount",
+          "tolerance": 0.05,
+          "enforcement": "STRICT"
+        },
+        {
+          "name": "line_item_accuracy",
+          "formula": "quantity × unit_price ≈ total_price",
+          "tolerance": 0.05,
+          "enforcement": "STRICT",
+          "per_item": true
+        }
+      ]
+    },
+    
+    "line_items": {
+      "required": true,
+      "minimum_items": 1,
+      "metadata_detection": {
+        "enabled": true,
+        "suspicious_quantity_threshold": 10000,
+        "flag_incomplete_pricing": true
+      }
+    },
+    
+    "ocr_quality": {
+      "text_based": {
+        "minimum_confidence": 40,
+        "enforcement": "LENIENT"
+      },
+      "scanned": {
+        "minimum_confidence": 30,
+        "enforcement": "LENIENT"
+      }
+    },
+    
+    "pass_criteria": {
+      "allow_warnings": false,
+      "allow_errors": false,
+      "must_have_all_critical_fields": true,
+      "must_pass_math_checks": true
+    }
+  },
+  
+  "specification_pipeline": {
+    "name": "Specification/Technical Sheet Pipeline",
+    "description": "Validation rules for product specs, technical sheets, datasheets",
+    "document_types": ["specification", "technical_sheet", "product_datasheet", "spec", "datasheet", "requirements"],
+    
+    "field_completeness": {
+      "critical_fields": [
+        "document_name",
+        "line_items"
+      ],
+      "optional_fields": [
+        "supplier",
+        "invoice_or_po_number",
+        "issue_date",
+        "total_amount",
+        "currency"
+      ],
+      "required_presence": "critical_only",
+      "enforcement": "LENIENT"
+    },
+    
+    "math_validation": {
+      "enabled": false,
+      "reason": "Specifications do not contain pricing data"
+    },
+    
+    "line_items": {
+      "required": true,
+      "minimum_items": 1,
+      "metadata_detection": {
+        "enabled": true,
+        "suspicious_quantity_threshold": 100000,
+        "note": "Higher threshold for specifications - often contain regulation numbers"
+      }
+    },
+    
+    "technical_requirements": {
+      "extract_specifications": true,
+      "extract_standards_compliance": true,
+      "extract_technical_features": true
+    },
+    
+    "ocr_quality": {
+      "text_based": {
+        "minimum_confidence": 30,
+        "enforcement": "LENIENT"
+      },
+      "scanned": {
+        "minimum_confidence": 20,
+        "enforcement": "LENIENT"
+      }
+    },
+    
+    "pass_criteria": {
+      "allow_warnings": true,
+      "allow_errors": false,
+      "must_have_all_critical_fields": true,
+      "must_pass_math_checks": false
+    }
+  },
+  
+  "global_settings": {
+    "numeric_parsing": {
+      "decimal_separators": [",", "."],
+      "thousands_separators": [".", ",", " "],
+      "currency_symbols": ["$", "€", "£", "¥", "₹", "S/", "S/."],
+      "handle_negative_numbers": true
+    },
+    
+    "text_processing": {
+      "normalize_whitespace": true,
+      "handle_unicode": true,
+      "extract_spanish_characters": true,
+      "handle_ocr_artifacts": true
+    },
+    
+    "confidence_scoring": {
+      "base_score": 100,
+      "deductions": {
+        "missing_critical_field": 25,
+        "math_mismatch": 20,
+        "incomplete_line_item": 5,
+        "suspicious_metadata": 10,
+        "low_extraction_confidence": 15,
+        "ocr_quality_issue": 15
+      },
+      "minimum_pass_score": 40
+    },
+    
+    "logging": {
+      "enabled": true,
+      "level": "INFO",
+      "log_directory": "logging/logs",
+      "log_format": "json",
+      "include_validation_details": true,
+      "include_extraction_details": true
+    }
+  },
+  
+  "routing_rules": {
+    "classification_keywords": {
+      "procurement": [
+        "invoice", "factura", "boleta",
+        "purchase order", "orden de compra", "pedido",
+        "po number", "invoice number",
+        "bill", "receipt", "recibo"
+      ],
+      "specification": [
+        "specification", "especificación",
+        "technical sheet", "hoja técnica",
+        "datasheet", "product datasheet",
+        "requirements", "requisitos",
+        "technical details", "detalles técnicos",
+        "standard", "norma", "norm"
+      ]
+    },
+    
+    "fallback_logic": {
+      "if_ambiguous": "use_document_analysis",
+      "if_insufficient_data": "use_confidence_score",
+      "default_route": "procurement_pipeline"
+    },
+    
+    "override_rules": {
+      "explicit_supplier": "procurement_pipeline",
+      "explicit_pricing": "procurement_pipeline",
+      "explicit_technical_requirements": "specification_pipeline",
+      "no_pricing_data": "specification_pipeline"
+    }
+  }
+}

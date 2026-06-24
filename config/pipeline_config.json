@@ -1,0 +1,67 @@
+{
+  "description": "Pipeline execution configuration",
+  "version": "1.0",
+  
+  "pipelines": {
+    "procurement": {
+      "name": "Procurement Pipeline",
+      "enabled": true,
+      "stages": [
+        "classify",
+        "extract",
+        "normalize",
+        "validate",
+        "finalize"
+      ],
+      "output_schema": {
+        "include_original": true,
+        "include_validation": true,
+        "include_confidence": true,
+        "include_line_items": true
+      },
+      "error_handling": "STRICT",
+      "continue_on_warning": false
+    },
+    
+    "specification": {
+      "name": "Specification Pipeline",
+      "enabled": true,
+      "stages": [
+        "classify",
+        "extract",
+        "normalize",
+        "validate",
+        "finalize"
+      ],
+      "output_schema": {
+        "include_original": true,
+        "include_validation": true,
+        "include_confidence": true,
+        "include_line_items": true,
+        "include_technical_specs": true
+      },
+      "error_handling": "LENIENT",
+      "continue_on_warning": true
+    }
+  },
+  
+  "execution": {
+    "parallel_processing": false,
+    "batch_size": 1,
+    "timeout_per_document": 30,
+    "max_retries": 1
+  },
+  
+  "output": {
+    "format": "json",
+    "directory": "output",
+    "file_naming": {
+      "procurement": "procurement_results_{timestamp}.json",
+      "specification": "specification_results_{timestamp}.json",
+      "combined": "deterministic_pipeline_results_{timestamp}.json",
+      "execution_log": "pipeline_execution_{timestamp}.log"
+    },
+    "include_summary": true,
+    "include_statistics": true
+  }
+}

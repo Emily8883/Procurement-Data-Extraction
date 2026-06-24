@@ -1,0 +1,5 @@
+document_name,document_type,extraction_method,classification_confidence,file_size_mb,pages,text_density_chars,text_ratio,image_ratio
+00c4e05f2d8e31c0-Copy.pdf,scanned,ocr_engine,HIGH,2.94,6,0,0.0,1.0
+00c4e05f2d8e31c0.pdf,scanned,ocr_engine,HIGH,2.95,6,0,0.0,1.0
+0c2f9fc842a866ee.pdf,text,text_parser,HIGH,0.86,6,20546,1.0,0.0
+0cca4ed1c20922e1.pdf,text,text_parser,HIGH,0.69,5,10727,1.0,0.0

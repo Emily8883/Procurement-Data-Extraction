@@ -39,7 +39,7 @@ class RetryConfig:
         self.initial_delay = initial_delay
         self.backoff_factor = backoff_factor
         self.fallback_enabled = fallback_enabled
-        self.log_dir = log_dir or Path("logging/retry_logs")
+        self.log_dir = log_dir or Path("pipeline_logging/retry_logs")
         self.log_dir.mkdir(parents=True, exist_ok=True)
 
 
@@ -167,7 +167,7 @@ class GracefulDegradationMode:
     
     def __init__(self, log_dir: Path = None):
         """Initialize degradation mode logger"""
-        self.log_dir = log_dir or Path("logging/degradation_logs")
+        self.log_dir = log_dir or Path("pipeline_logging/degradation_logs")
         self.log_dir.mkdir(parents=True, exist_ok=True)
         self.degradation_events = []
     

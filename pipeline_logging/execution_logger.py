@@ -63,7 +63,7 @@ class PipelineLogger:
     def __init__(self, log_dir: Path = None):
         """Initialize logger"""
         if log_dir is None:
-            log_dir = Path(__file__).parent.parent / 'logging' / 'logs'
+            log_dir = Path(__file__).parent.parent / 'pipeline_logging' / 'logs'
         
         self.log_dir = Path(log_dir)
         self.log_dir.mkdir(parents=True, exist_ok=True)

@@ -203,7 +203,7 @@ def extract_from_pdfs(pdf_folder='pdfs'):
         print(f"Processing: {pdf_file.name}")
         
         try:
-            items = extract_procurement_items_from_pdf(pdf_file)
+            items = extract_procurement_data(str(pdf_file))
             all_items.extend(items)
             print(f"  ✓ Extracted {len(items)} items")
         
@@ -213,94 +213,130 @@ def extract_from_pdfs(pdf_folder='pdfs'):
     return all_items
 
 
-# Main execution
-if __name__ == "__main__":
-    print("Spanish Procurement Document Extractor (Enhanced v2)")
-    print("=" * 80)
-    print()
-    
-    # Extract procurement items from all PDFs
-    items = extract_from_pdfs('pdfs')
-    
-    # Create DataFrame
-    df = pd.DataFrame(items)
-    
-    print()
-    print("=" * 80)
-    print(f"EXTRACTION SUMMARY")
-    print("=" * 80)
-    print(f"Total items extracted: {len(df)}")
-    if len(df) > 0:
-        print(f"Total PDFs processed: {df['pdf_name'].nunique()}")
-        print(f"Items with quantity > 0: {len(df[df['quantity'] > 0])}")
-        print(f"Items with item_id: {len(df[df['item_id'] != ''])}")
-        print(f"Items with specifications: {len(df[df['technical_specifications'] != ''])}")
-    print()
-    
-    # Display first 10 rows
-    print("FIRST 10 ROWS:")
-    print("=" * 80)
-    if len(df) > 0:
-        # Display with better formatting
-        pd.set_option('display.max_columns', None)
-        pd.set_option('display.max_colwidth', None)
-        pd.set_option('display.width', None)
-        print(df.head(10).to_string(index=False))
-    else:
-        print("No items extracted")
-    
-    print()
-    print("=" * 80)
-    
-    # Show data types and summary statistics
-    if len(df) > 0:
-        print("\nDataFrame Info:")
-        print(df.info())
-        
-        print("\nQuantity Statistics:")
-        print(df[['quantity']].describe())
-        
-        print("\nItems by PDF:")
-        print(df.groupby('pdf_name').size())
-        
-        # Show sample items with all details
-        print("\n" + "=" * 80)
-        print("DETAILED SAMPLE ITEMS:")
-        print("=" * 80)
-        for idx, row in df.head(5).iterrows():
-            print(f"\n[Item {idx + 1}]")
-            print(f"  PDF File: {row['pdf_name']}")
-            print(f"  Item ID: {row['item_id'] if row['item_id'] else 'N/A'}")
-            print(f"  Description: {row['original_description']}")
-            print(f"  Quantity: {row['quantity']}")
-            print(f"  Unit: {row['unit']}")
-            if row['technical_specifications']:
-                print(f"  Specs: {row['technical_specifications']}")
-        
-        # Export to CSV and Excel
-        print("\n" + "=" * 80)
-        print("EXPORTING DATA")
-        print("=" * 80)
-        
-        output_dir = Path('output')
-        output_dir.mkdir(exist_ok=True)
-        
-        csv_file = output_dir / 'raw_extracted.csv'
-        xlsx_file = output_dir / 'raw_extracted.xlsx'
-        
-        # Save to CSV
-        df.to_csv(csv_file, index=False, encoding='utf-8')
-        print(f"✓ Saved to: {csv_file}")
-        
-        # Save to Excel
-        df.to_excel(xlsx_file, index=False, sheet_name='Procurement Items')
-        print(f"✓ Saved to: {xlsx_file}")
-        
-        print(f"\nTotal records exported: {len(df)}")
-        
-        print("\nSample with specifications:")
-        df_with_specs = df[df['technical_specifications'] != '']
-        if len(df_with_specs) > 0:
-            print(df_with_specs[['pdf_name', 'original_description', 'technical_specifications']].head(5).to_string(index=False))
-        else:
-            print("No items with specifications found")
+# New pipeline orchestration: extraction -> normalization -> matching -> export
+from supplier_matching import SupplierMatcher
+from price_estimation import PriceEstimator
+from pipeline_extraction.enhanced_pdf_extractor import extract_procurement_data
+from pipeline_validation.data_quality_validator import validate_pipeline_output
+
+
+def normalize_item(raw_item: dict) -> dict:
+    """Normalize a raw extracted item into the final schema."""
+    # Final schema fields:
+    # document_name, line_item_id, item_id, original_description, normalized_description,
+    # quantity, unit, unit_price, total_price, currency, technical_specifications,
+    # supplier_match_id, supplier_name, supplier_confidence, supplier_match_source,
+    # price_confidence, extraction_confidence
+
+    normalized = {
+        'document_name': raw_item.get('pdf_name', '') or raw_item.get('document_name', ''),
+        'line_item_id': raw_item.get('item_id', '') or '',
+        'item_id': raw_item.get('item_id', '') or '',
+        'original_description': raw_item.get('item_description', '') or raw_item.get('original_description', '')[:1000],
+        'normalized_description': ' '.join((raw_item.get('item_description', '') or raw_item.get('original_description', '')).split())[:1000],
+        'quantity': raw_item.get('quantity') if raw_item.get('quantity') is not None else 0,
+        'unit': raw_item.get('unit', ''),
+        'unit_price': raw_item.get('unit_price'),
+        'total_price': raw_item.get('total_amount') or raw_item.get('total_price'),
+        'total_amount': raw_item.get('total_amount'),
+        'invoice_or_po_number': raw_item.get('invoice_or_po_number', ''),
+        'currency': raw_item.get('currency'),
+        'technical_specifications': raw_item.get('technical_specifications', ''),
+        'supplier_match_id': None,
+        'supplier_name': raw_item.get('supplier_name'),
+        'supplier_confidence': 0,
+        'supplier_match_source': None,
+        'price_confidence': 0,
+        'extraction_confidence': raw_item.get('extraction_confidence', None) if isinstance(raw_item.get('extraction_confidence', None), (int, float)) else None,
+        'source_page': raw_item.get('source_page')
+    }
+
+    return normalized
+
+
+def export_results(final_items: list, output_dir: Path = Path('output')) -> None:
+    """Export final items to JSON and Excel."""
+    output_dir.mkdir(parents=True, exist_ok=True)
+    json_path = output_dir / 'output.json'
+    xlsx_path = output_dir / 'output.xlsx'
+
+    # Write JSON
+    import json
+    with open(json_path, 'w', encoding='utf-8') as f:
+        json.dump(final_items, f, ensure_ascii=False, indent=2)
+
+    # Write Excel via pandas
+    df_final = pd.DataFrame(final_items)
+    # Ensure consistent column order for readability
+    cols = [
+        'document_name', 'line_item_id', 'item_id', 'original_description', 'normalized_description',
+        'quantity', 'unit', 'unit_price', 'total_price', 'currency', 'technical_specifications',
+        'supplier_match_id', 'supplier_name', 'supplier_confidence', 'supplier_match_source',
+        'price_confidence', 'extraction_confidence'
+    ]
+    # Keep only available cols
+    cols = [c for c in cols if c in df_final.columns]
+    df_final = df_final[cols]
+    df_final.to_excel(xlsx_path, index=False, sheet_name='Procurement')
+
+    print(f"✓ Exported JSON: {json_path}")
+    print(f"✓ Exported Excel: {xlsx_path}")
+
+
+def run_pipeline(pdf_folder: str = 'pdfs') -> list:
+    print('\nStarting full extraction pipeline')
+    print('=' * 60)
+
+    # 1) Extraction (existing extractor)
+    extracted = extract_from_pdfs(pdf_folder)
+    print(f"Extracted raw items: {len(extracted)}")
+
+    # 2) Normalization
+    normalized = [normalize_item(it) for it in extracted]
+    print(f"Normalized items: {len(normalized)}")
+
+    # 3) Supplier matching (placeholder interface)
+    matcher = SupplierMatcher()
+    priceer = PriceEstimator()
+
+    final_items = []
+    for item in normalized:
+        # Match supplier (placeholder)
+        match = matcher.match_supplier(item['normalized_description'])
+        if match:
+            item['supplier_match_id'] = match.get('match_id')
+            item['supplier_name'] = match.get('name')
+            item['supplier_confidence'] = match.get('confidence', 0)
+            item['supplier_match_source'] = match.get('source')
+
+        # Price estimation placeholder
+        price_est = priceer.estimate_price(item['normalized_description'])
+        if price_est:
+            item['unit_price'] = price_est.get('unit_price')
+            item['total_price'] = price_est.get('total_price')
+            item['currency'] = price_est.get('currency')
+            item['price_confidence'] = price_est.get('confidence', 0)
+
+        final_items.append(item)
+
+    # 4) Export
+    export_results(final_items, output_dir=Path('output'))
+
+    # 5) Data quality validation
+    validation_report = validate_pipeline_output(final_items)
+    print('\nData Quality Validation Summary:')
+    print(f"  Total records: {validation_report['total_records']}")
+    print(f"  Valid records: {validation_report['valid_records']}")
+    print(f"  Partial records: {validation_report['partial_records']}")
+    print(f"  Invalid records: {validation_report['invalid_records']}")
+    print(f"  Completeness score: {validation_report['completeness_score']:.2f}")
+    print('  Missing fields summary:')
+    for field, count in validation_report['missing_fields_summary'].items():
+        print(f"    - {field}: {count}")
+
+    return final_items
+
+
+if __name__ == '__main__':
+    final = run_pipeline('pdfs')
+    print('\nPipeline complete. Items processed:', len(final))

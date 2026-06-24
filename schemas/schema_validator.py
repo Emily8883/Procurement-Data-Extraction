@@ -30,7 +30,7 @@ class SchemaValidator:
         Args:
             validation_log_dir: Directory to save validation errors
         """
-        self.validation_log_dir = validation_log_dir or Path("logging/validation_errors")
+        self.validation_log_dir = validation_log_dir or Path("pipeline_logging/validation_errors")
         self.validation_log_dir.mkdir(parents=True, exist_ok=True)
         
         self.validation_failures = []

@@ -17,7 +17,7 @@ from typing import List, Dict, Any, Optional
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent))
 
-from logging.execution_logger import PipelineLogger
+from pipeline_logging.execution_logger import PipelineLogger
 from pipelines.document_router import DocumentTypeRouter
 from pipelines.procurement_pipeline import ProcurementPipeline
 from pipelines.specification_pipeline import SpecificationPipeline
@@ -32,7 +32,7 @@ class DeterministicPipeline:
             config_dir = Path(__file__).parent / 'config'
         
         if log_dir is None:
-            log_dir = Path(__file__).parent / 'logging' / 'logs'
+            log_dir = Path(__file__).parent / 'pipeline_logging' / 'logs'
         
         self.config_dir = Path(config_dir)
         self.log_dir = Path(log_dir)
@@ -372,7 +372,7 @@ def main():
             print(f"  Procurement documents: {results['by_pipeline']['procurement']}")
             print(f"  Specification documents: {results['by_pipeline']['specification']}")
             print(f"\nOutput files saved to: {Path(__file__).parent / 'output'}")
-            print(f"Execution log: {Path(__file__).parent / 'logging' / 'logs'}")
+            print(f"Execution log: {Path(__file__).parent / 'pipeline_logging' / 'logs'}")
             print(f"\n{'='*80}\n")
             
             return 0

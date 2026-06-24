@@ -6,6 +6,7 @@ from typing import List, Dict, Any, Optional
 import pdfplumber
 from .document_context_builder import build_document_context
 from .table_schema_inference import infer_table_schema, map_row_cells, is_header_row
+from .row_alignment_corrector import correct_row_alignment
 
 try:
     import pytesseract
@@ -312,7 +313,8 @@ def extract_procurement_data_hybrid(pdf_path: str) -> List[Dict[str, Any]]:
                 for row in table_rows:
                     if is_header_row(row):
                         continue
-                    mapped = map_row_cells(row, schema)
+                    # Use row-level alignment correction instead of simple schema mapping
+                    mapped = correct_row_alignment(row, schema, context)
                     if not mapped.get('description') and not mapped.get('quantity') and not mapped.get('unit_price'):
                         continue
                     records.append(_parse_mapped_table_record(mapped, context, page_num, pdf_path.name, row))

@@ -1,0 +1,461 @@
+0060:     PATTERNS = {
+0061:         'invoice_po': [
+0062:             r'(?:Invoice|INVOICE|Factura|FACTURA)[\\s#:]*([A-Z0-9\\-]{4,20})',
+0063:             r'(?:PO|P\\.O|ORDER)[\\s#:]*([A-Z0-9\\-]{4,20})',
+0064:             r'(?:N\xfamero|Ref|Reference)[\\s#:]*([A-Z0-9\\-]{4,20})',
+0065:         ],
+0066:         'date': [
+0067:             r'(?:Date|Fecha|Issue Date|Fecha de emisi\xf3n)[:\\s]+(\\d{1,2}[-/]\\d{1,2}[-/]\\d{2,4})',
+0068:             r'(\\d{1,2}[-/]\\d{1,2}[-/]\\d{2,4})',
+0069:         ],
+0070:         'supplier': [
+0071:             r'(?:Supplier|Proveedor|Vendor|From)[:\\s]+([A-Za-z\xe1\xe9\xed\xf3\xfa\xf1\xfcA\xc9\xcd\xd3\xda\xd1\xdc\\s,\\.&]{5,50}?)(?:\\n|,|$)',
+0072:             r'(?:Company|Empresa|Organization)[:\\s]+([A-Za-z\xe1\xe9\xed\xf3\xfa\xf1\xfcA\xc9\xcd\xd3\xda\xd1\xdc\\s,\\.&]{5,50}?)(?:\\n|,|$)',
+0073:         ],
+0074:         'currency': [
+0075:             r'(?:Currency|Moneda)[:\\s]*([A-Z]{3})',
+0076:             r'[\\s\\(]([A-Z]{3})[\\s\\)]',
+0077:             r'(USD|EUR|GBP|MXN|COP|ARS)',
+0078:         ],
+0079:         'price': [
+0080:             r'(?:Total|TOTAL|Subtotal|SUBTOTAL)[:\\s]*\\$?[\\s]*([\\d,\\.]+)',
+0081:             r'([\\d,\\.]+)(?:\\s*(?:USD|EUR|GBP|MXN|COP|ARS))?(?:\\s*$)',
+0082:         ],
+0083:         'quantity': [
+0084:             r'(?:Qty|Quantity|Cantidad)[:\\s]*([\\d,\\.]+)',
+0085:             r'([\\d,\\.]+)(?:\\s*(?:u|un|pcs|kg|m))',
+0086:         ],
+0087:         'tax': [
+0088:             r'(?:Tax|VAT|IVA|Impuesto)[:\\s]*\\$?[\\s]*([\\d,\\.]+)',
+0089:         ],
+0090:     }
+0091:     
+0092:     def __init__(self, classifications_json: str, pdf_folder: str = "pdfs"):
+0093:         """
+0094:         Initialize the extractor.
+0095:         
+0096:         Args:
+0097:             classifications_json: Path to document classifications
+0098:             pdf_folder: Path to PDF folder
+0099:         """
+0100:         self.classifications_file = Path(classifications_json)
+0101:         self.pdf_folder = Path(pdf_folder)
+0102:         self.classifications = {}
+0103:         self.extracted_data = []
+0104:         self.load_classifications()
+0105:     
+0106:     def load_classifications(self):
+0107:         """Load document classifications."""
+0108:         if not self.classifications_file.exists():
+0109:             print(f"Warning: Classifications file not found at {self.classifications_file}")
+0110:             return
+0111:         
+0112:         with open(self.classifications_file, 'r', encoding='utf-8') as f:
+0113:             data = json.load(f)
+0114:             for doc in data:
+0115:                 self.classifications[doc["document_name"]] = {
+0116:                     "document_type": doc["document_type"],
+0117:                     "extraction_method": doc["extraction_method"],
+0118:                 }
+0119:         
+0120:         print(f"Loaded classifications for {len(self.classifications)} documents")
+0121:     
+0122:     def extract_text_based(self, pdf_path: Path) -> str:
+0123:         """Extract text from text-based PDF."""
+0124:         print(f"\\n\U0001f4c4 Processing TEXT document: {pdf_path.name}")
+0125:         
+0126:         full_text = ""
+0127:         try:
+0128:             with pdfplumber.open(pdf_path) as pdf:
+0129:                 for page_num, page in enumerate(pdf.pages, 1):
+0130:                     text = page.extract_text()
+0131:                     if text:
+0132:                         full_text += f"\\n--- PAGE {page_num} ---\\n{text}"
+0133:                     
+0134:                     # Also try to extract tables
+0135:                     tables = page.extract_tables()
+0136:                     if tables:
+0137:                         for table in tables:
+0138:                             full_text += "\\n--- TABLE ---\\n"
+0139:                             for row in table:
+0140:                                 full_text += " | ".join(str(cell) if cell else "" for cell in row) + "\\n"
+0141:             
+0142:             return full_text
+0143:         except Exception as e:
+0144:             print(f"  Error extracting text: {e}")
+0145:             return ""
+0146:     
+0147:     def load_pdf_images(self, pdf_path: Path) -> List[Any]:
+0148:         """Load PDF pages as PIL images using available rendering libraries."""
+0149:         images = []
+0150:         if PDF2IMAGE_AVAILABLE:
+0151:             try:
+0152:                 images = pdf2image.convert_from_path(str(pdf_path), dpi=300)
+0153:                 return images
+0154:             except Exception:
+0155:                 pass
+0156: 
+0157:         if FITZ_AVAILABLE:
+0158:             try:
+0159:                 doc = fitz.open(str(pdf_path))
+0160:                 for page in doc:
+0161:                     pix = page.get_pixmap(dpi=300)
+0162:                     mode = "RGB" if pix.n < 4 else "RGB"
+0163:                     image = Image.frombytes(mode, [pix.width, pix.height], pix.samples)
+0164:                     images.append(image)
+0165:                 doc.close()
+0166:                 return images
+0167:             except Exception:
+0168:                 pass
+0169: 
+0170:         raise RuntimeError(
+0171:             "No PDF rendering library available for OCR. Install pdf2image+poppler or PyMuPDF."
+0172:         )
+0173: 
+0174:     def clean_ocr_text(self, text: str) -> str:
+0175:         """Apply lightweight OCR cleanup and normalize common substitution errors."""
+0176:         if not text:
+0177:             return text
+0178: 
+0179:         text = text.replace('\\r', '\\n')
+0180:         text = re.sub(r'[\x00-\x1f]+', '', text)
+0181:         substitutions = {
+0182:             r'(?<=\\D)0(?=[A-Z\xc1\xc9\xcd\xd3\xda\xd1\xdc])': 'O',
+0183:             r'(?<=[A-Za-z\xc1\xc9\xcd\xd3\xda\xd1\xdc])1(?=[A-Za-z\xc1\xc9\xcd\xd3\xda\xd1\xdc])': 'I',
+0184:             r'(?<=\\D)l(?=\\d)': '1',
+0185:             r'(?<=\\d)O(?=\\d)': '0',
+0186:             r'(?<=\\s)\\|(?=\\s)': '|',
+0187:             r'[\u2018\u2019`\xb4]': "'",
+0188:         }
+0189: 
+0190:         for pattern, replacement in substitutions.items():
+0191:             text = re.sub(pattern, replacement, text)
+0192: 
+0193:         text = re.sub(r'\\s{2,}', ' ', text)
+0194:         return text.strip()
+0195: 
+0196:     def preprocess_image(self, image: Any) -> Any:
+0197:         """Preprocess an image before OCR to improve contrast and readability."""
+0198:         if not PIL_AVAILABLE:
+0199:             return image
+0200: 
+0201:         image = image.convert('L')
+0202:         image = ImageOps.autocontrast(image, cutoff=2)
+0203:         image = image.filter(ImageFilter.MedianFilter(size=3))
+0204:         image = ImageEnhance.Contrast(image).enhance(1.5)
+0205:         image = image.filter(ImageFilter.SMOOTH_MORE)
+0206: 
+0207:         try:
+0208:             import numpy as np
+0209:         except ImportError:
+0210:             return image
+0211: 
+0212:         if OPENCV_AVAILABLE:
+0213:             try:
+0214:                 arr = np.array(image)
+0215:                 arr = cv2.GaussianBlur(arr, (3, 3), 0)
+0216:                 _, thresh = cv2.threshold(arr, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+0217:                 return Image.fromarray(thresh)
+0218:             except Exception:
+0219:                 pass
+0220: 
+0221:         # Fallback to simple thresholding
+0222:         image = image.point(lambda x: 0 if x < 140 else 255, '1')
+0223:         return image.convert('L')
+0224: 
+0225:     def ocr_image(self, image: Any, config: str = '--psm 6 --oem 3') -> str:
+0226:         """Perform OCR on an image and return cleaned text."""
+0227:         if not OCR_AVAILABLE:
+0228:             raise RuntimeError('OCR engine unavailable')
+0229: 
+0230:         text = pytesseract.image_to_string(image, lang='spa+eng', config=config)
+0231:         text = self.clean_ocr_text(text)
+0232:         return text
+0233: 
+0234:     def _score_ocr_text(self, text: str) -> float:
+0235:         """Score extracted OCR text to choose the best candidate."""
+0236:         if not text or len(text.strip()) < 20:
+0237:             return 0.0
+0238: 
+0239:         keywords = re.findall(
+0240:             r'(?:INVOICE|FACTURA|TOTAL|SUBTOTAL|IVA|TAX|PROVEEDOR|SUPPLIER|FECHA|DATE|CANTIDAD|QUANTITY|MONEDA|CURRENCY)',
+0241:             text, re.IGNORECASE)
+0242:         keyword_score = min(len(keywords) * 6, 40)
+0243: 
+0244:         numeric_density = len(re.findall(r'\\d', text)) / max(len(text), 1)
+0245:         numeric_score = min(numeric_density * 40, 40)
+0246: 
+0247:         noise_penalty = len(re.findall(r'[\\$@%&*#\\^~]', text))
+0248:         noise_score = max(0, 20 - noise_penalty * 2)
+0249: 
+0250:         table_bonus = 10 if '|' in text or '\\t' in text else 0
+0251: 
+0252:         return keyword_score + numeric_score + noise_score + table_bonus
+0253: 
+0254:     def extract_ocr_candidates(self, pdf_path: Path) -> Tuple[str, str]:
+0255:         """Run OCR on a scanned PDF using multiple preprocess strategies and return best text."""
+0256:         images = self.load_pdf_images(pdf_path)
+0257:         best_text = ''
+0258:         best_score = -1.0
+0259:         chosen_method = 'ocr_raw'
+0260: 
+0261:         for page_num, image in enumerate(images, 1):
+0262:             page_candidates = []
+0263: 
+0264:             try:
+0265:                 raw_text = self.ocr_image(image)
+0266:                 page_candidates.append(('raw', raw_text))
+0267:             except Exception:
+0268:                 page_candidates.append(('raw', ''))
+0269: 
+0270:             try:
+0271:                 enhanced_image = self.preprocess_image(image)
+0272:                 enhanced_text = self.ocr_image(enhanced_image)
+0273:                 page_candidates.append(('enhanced', enhanced_text))
+0274:             except Exception:
+0275:                 page_candidates.append(('enhanced', ''))
+0276: 
+0277:             for mode, candidate_text in page_candidates:
+0278:                 page_score = self._score_ocr_text(candidate_text)
+0279:                 page_text = f"\\n--- PAGE {page_num} ({mode.upper()}) ---\\n{candidate_text}"
+0280:                 if page_score > best_score:
+0281:                     best_score = page_score
+0282:                     best_text = page_text
+0283:                     chosen_method = mode
+0284: 
+0285:             if best_score < 20 and page_num == 1:
+0286:                 # Fallback to raw OCR if enhanced preprocessing does not help
+0287:                 best_text = page_candidates[0][1]
+0288:                 chosen_method = 'ocr_fallback'
+0289: 
+0290:         return best_text, chosen_method
+0291: 
+0292:     def extract_ocr_based(self, pdf_path: Path) -> str:
+0293:         """Extract text from scanned PDF using OCR with preprocessing and candidate ranking."""
+0294:         print(f"\\n\U0001f5bc\ufe0f  Processing SCANNED document: {pdf_path.name}")
+0295: 
+0296:         if not OCR_AVAILABLE:
+0297:             print("  \u26a0\ufe0f  OCR not available. Please install: pytesseract, pdf2image, Tesseract-OCR")
+0298:             return ""
+0299: 
+0300:         try:
+0301:             ocr_text, extraction_method = self.extract_ocr_candidates(pdf_path)
+0302:             if not ocr_text.strip() and extraction_method == 'ocr_fallback':
+0303:                 print("  \u26a0\ufe0f  OCR candidate selection produced empty output")
+0304:             return ocr_text
+0305:         except Exception as e:
+0306:             print(f"  Error during OCR: {e}")
+0307:             return ""
+0308:     
+0309:     def extract_field(self, text: str, patterns: List[str]) -> Optional[str]:
+0310:         """Extract a field using multiple regex patterns."""
+0311:         for pattern in patterns:
+0312:             try:
+0313:                 match = re.search(pattern, text, re.IGNORECASE | re.MULTILINE)
+0314:                 if match:
+0315:                     value = match.group(1).strip() if match.lastindex and match.lastindex >= 1 else match.group(0).strip()
+0316:                     # Additional validation
+0317:                     if value and len(value) >= 2 and len(value) <= 200:
+0318:                         return value
+0319:             except Exception as e:
+0320:                 continue
+0321:         return None
+0322:     
+0323:     def _parse_decimal(self, raw_value: str) -> Optional[float]:
+0324:         """Parse a numeric string into a float, handling common OCR separators."""
+0325:         if not raw_value:
+0326:             return None
+0327: 
+0328:         value_str = raw_value.replace(' ', '').replace('O', '0').replace('o', '0')
+0329:         value_str = value_str.replace('\u20ac', '').replace('$', '').replace('\xa3', '')
+0330:         value_str = re.sub(r'[^0-9\\.,]', '', value_str)
+0331: 
+0332:         if value_str.count('.') > 1 and value_str.count(',') == 1:
+0333:             value_str = value_str.replace('.', '')
+0334:         if value_str.count(',') > 1 and value_str.count('.') == 1:
+0335:             value_str = value_str.replace(',', '')
+0336:         if ',' in value_str and '.' in value_str and value_str.index(',') > value_str.index('.'):
+0337:             value_str = value_str.replace(',', '')
+0338:         value_str = value_str.replace(',', '.')
+0339: 
+0340:         try:
+0341:             return float(value_str)
+0342:         except ValueError:
+0343:             return None
+0344: 
+0345:     def extract_all_prices(self, text: str) -> Tuple[List[float], Optional[float], Optional[float], Optional[float]]:
+0346:         """Extract all price-related values from text."""
+0347:         prices = []
+0348:         price_pattern = r'(?:[\\$\u20ac\xa3]|USD|EUR|GBP|MXN|COP|ARS|CAD|AUD)?\\s*([0-9]{1,3}(?:[.,][0-9]{3})*(?:[.,][0-9]{1,2})?)'
+0349:         matches = re.findall(price_pattern, text, re.IGNORECASE)
+0350: 
+0351:         for match in matches:
+0352:             value = self._parse_decimal(match)
+0353:             if value is not None and 0 < value < 10000000:
+0354:                 prices.append(value)
+0355: 
+0356:         subtotal = None
+0357:         tax = None
+0358:         total_amount = None
+0359: 
+0360:         labeled_patterns = {
+0361:             'subtotal': r'(?:Subtotal|Sub-total|Sub Total|SUBTOTAL)[:\\s]*[\\$\u20ac\xa3]?\\s*([\\d,\\.]+)',
+0362:             'tax': r'(?:Tax|VAT|IVA|Impuesto|Impuesto Ventas)[:\\s]*[\\$\u20ac\xa3]?\\s*([\\d,\\.]+)',
+0363:             'total': r'(?:Total Amount|Total|TOTAL|Total Due|Monto Total|Importe Total|Total a Pagar)[:\\s]*[\\$\u20ac\xa3]?\\s*([\\d,\\.]+)',
+0364:         }
+0365: 
+0366:         for field, pattern in labeled_patterns.items():
+0367:             try:
+0368:                 match = re.search(pattern, text, re.IGNORECASE)
+0369:                 if match:
+0370:                     parsed = self._parse_decimal(match.group(1))
+0371:                     if parsed is not None:
+0372:                         if field == 'subtotal':
+0373:                             subtotal = parsed
+0374:                         elif field == 'tax':
+0375:                             tax = parsed
+0376:                         elif field == 'total':
+0377:                             total_amount = parsed
+0378:             except (ValueError, AttributeError):
+0379:                 continue
+0380: 
+0381:         if total_amount is None and prices:
+0382:             total_amount = max(prices)
+0383: 
+0384:         return prices, subtotal, tax, total_amount
+0385:     
+0386:     def _find_quantity_in_line(self, line: str) -> Optional[str]:
+0387:         match = re.search(r'(?:Qty|Quantity|Cantidad|Cant\\.|QTY)[:\\s]*([\\d,\\.]+)', line, re.IGNORECASE)
+0388:         if match:
+0389:             return match.group(1).replace(',', '.').strip()
+0390: 
+0391:         match = re.search(r'([\\d,\\.]+)\\s*(?:u|un|pcs|kg|m|l|ud|uds|pza|pz)', line, re.IGNORECASE)
+0392:         if match:
+0393:             return match.group(1).replace(',', '.').strip()
+0394: 
+0395:         return None
+0396: 
+0397:     def _find_price_in_line(self, line: str) -> Optional[str]:
+0398:         match = re.search(r'(?:Unit Price|Precio Unitario|Price|Precio)[:\\s]*[\\$\u20ac\xa3]?\\s*([\\d,\\.]+)', line, re.IGNORECASE)
+0399:         if match:
+0400:             return match.group(1).replace(',', '.').strip()
+0401: 
+0402:         match = re.search(r'[\\$\u20ac\xa3]\\s*([\\d,\\.]+)', line)
+0403:         if match:
+0404:             return match.group(1).replace(',', '.').strip()
+0405: 
+0406:         return None
+0407: 
+0408:     def _find_total_in_line(self, line: str) -> Optional[str]:
+0409:         match = re.search(r'(?:Total Amount|Total|TOTAL|Monto Total|Importe Total|Total a Pagar)[:\\s]*[\\$\u20ac\xa3]?\\s*([\\d,\\.]+)', line, re.IGNORECASE)
+0410:         if match:
+0411:             return match.group(1).replace(',', '.').strip()
+0412:         return None
+0413: 
+0414:     def extract_line_items(self, text: str) -> List[Dict[str, str]]:
+0415:         """Extract line items from text."""
+0416:         line_items = []
+0417:         lines = [line.strip() for line in text.split('\\n') if line.strip()]
+0418: 
+0419:         for line in lines:
+0420:             if len(line) < 12:
+0421:                 continue
+0422:             if any(skip in line.upper() for skip in ['PAGE', 'INVOICE', 'FACTURA', 'DATE:', 'FECHA:', '---', 'SUBTOTAL', 'TOTAL', 'TAX', 'IVA', 'PROVEEDOR', 'SUPPLIER']):
+0423:                 continue
+0424: 
+0425:             if '|' in line or '\\t' in line:
+0426:                 cols = re.split(r'\\s*\\|\\s*|\\t+', line)
+0427:                 if len(cols) >= 3 and any(re.search(r'\\d', col) for col in cols[1:]):
+0428:                     description = cols[1].strip() if len(cols) > 1 else cols[0].strip()
+0429:                     quantity = self._find_quantity_in_line(line) or self._find_quantity_in_line(cols[-2] if len(cols) > 2 else line)
+0430:                     unit_price = self._find_price_in_line(line) or self._find_price_in_line(cols[-1] if len(cols) > 2 else line)
+0431:                     total_price = self._find_total_in_line(line) or self._find_price_in_line(cols[-1] if len(cols) > 2 else line)
+0432: 
+0433:                     if description and (quantity or unit_price or total_price):
+0434:                         line_items.append({
+0435:                             'description': description[:150],
+0436:                             'quantity': quantity or '',
+0437:                             'unit_price': unit_price or '',
+0438:                             'total_price': total_price or ''
+0439:                         })
+0440:                         continue
+0441: 
+0442:             text_match = re.search(r'[A-Za-z]{5,}', line)
+0443:             number_match = re.search(r'[\\d,\\.]{2,}', line)
+0444:             if text_match and number_match:
+0445:                 quantity = self._find_quantity_in_line(line)
+0446:                 unit_price = self._find_price_in_line(line)
+0447:                 total_price = self._find_total_in_line(line)
+0448: 
+0449:                 if quantity or unit_price or total_price:
+0450:                     line_items.append({
+0451:                         'description': line[:150],
+0452:                         'quantity': quantity or '',
+0453:                         'unit_price': unit_price or '',
+0454:                         'total_price': total_price or ''
+0455:                     })
+0456: 
+0457:         unique_items = []
+0458:         seen_descriptions = set()
+0459:         for item in line_items:
+0460:             desc_lower = item['description'].lower()
+0461:             if desc_lower not in seen_descriptions:
+0462:                 seen_descriptions.add(desc_lower)
+0463:                 unique_items.append(item)
+0464: 
+0465:         return unique_items[:20]
+0466:     
+0467:     def _estimate_text_confidence(self, text: str) -> int:
+0468:         if not text or len(text.strip()) < 20:
+0469:             return 0
+0470: 
+0471:         keywords = re.findall(
+0472:             r'(?:INVOICE|FACTURA|TOTAL|SUBTOTAL|IVA|TAX|PROVEEDOR|SUPPLIER|FECHA|DATE|CANTIDAD|QUANTITY|MONEDA|CURRENCY|ORDER|ORDEN)',
+0473:             text, re.IGNORECASE)
+0474:         score = min(len(keywords) * 8, 40)
+0475: 
+0476:         line_item_matches = len(re.findall(r'\\b(?:Qty|Quantity|Cantidad|Unidad|Unit)\\b', text, re.IGNORECASE))
+0477:         score += min(line_item_matches * 5, 20)
+0478: 
+0479:         noise_count = len(re.findall(r'[^\\w\\s\\-:\\|\\.\\$\u20ac\xa3,\\/]', text))
+0480:         score -= min(noise_count, 15)
+0481: 
+0482:         return max(0, min(score, 60))
+0483: 
+0484:     def calculate_confidence_score(self, missing_fields: List[str], extracted_text: str = "") -> int:
+0485:         """Calculate confidence score based on missing fields and OCR text quality."""
+0486:         total_fields = 8
+0487:         found_fields = max(0, total_fields - len(missing_fields))
+0488: 
+0489:         base_score = int((found_fields / total_fields) * 100)
+0490:         text_quality = self._estimate_text_confidence(extracted_text)
+0491: 
+0492:         critical_fields = ['supplier', 'invoice_or_po_number', 'total_amount']
+0493:         missing_critical = [f for f in missing_fields if f in critical_fields]
+0494:         penalty = len(missing_critical) * 10
+0495: 
+0496:         confidence = max(0, min(100, base_score + int(text_quality * 0.5) - penalty))
+0497:         return confidence
+0498:     
+0499:     def extract_document(self, pdf_path: Path) -> Dict[str, Any]:
+0500:         """
+0501:         Extract procurement data from a single PDF.
+0502:         
+0503:         Returns:
+0504:             Dictionary with extracted data and missing fields
+0505:         """
+0506:         print(f"\\n{'='*70}")
+0507:         print(f"Extracting: {pdf_path.name}")
+0508:         print('='*70)
+0509:         
+0510:         try:
+0511:             document_name = pdf_path.name
+0512:             doc_classification = self.classifications.get(document_name, {})
+0513:             document_type = doc_classification.get("document_type", "unknown")
+0514:             extraction_method = doc_classification.get("extraction_method", "unknown")
+0515:             
+0516:             # Extract text based on document type
+0517:             if document_type == "scanned":
+0518:                 extracted_text = self.extract_ocr_based(pdf_path)
+0519:             else:
+0520:                 extracted_text = self.extract_text_based(pdf_path)

@@ -1,0 +1,70 @@
+300:     def extract_ocr_based(self, pdf_path: Path) -> str:
+301:         """Extract text from scanned PDF using OCR with preprocessing and candidate ranking."""
+302:         print(f"\\n\U0001f5bc\ufe0f  Processing SCANNED document: {pdf_path.name}")
+303: 
+304:         if not OCR_AVAILABLE:
+305:             print("  \u26a0\ufe0f  OCR not available. Please install: pytesseract, pdf2image, Tesseract-OCR")
+306:             return ""
+307: 
+308:         try:
+309:             ocr_text, extraction_method = self.extract_ocr_candidates(pdf_path)
+310:             if not ocr_text.strip() and extraction_method == 'ocr_fallback':
+311:                 print("  \u26a0\ufe0f  OCR candidate selection produced empty output")
+312:             return ocr_text
+313:         except Exception as e:
+314:             print(f"  Error during OCR: {e}")
+315:             return ""
+316:     
+317:     def extract_field(self, text: str, patterns: List[str]) -> Optional[str]:
+318:         """Extract a field using multiple regex patterns."""
+319:         for pattern in patterns:
+320:             try:
+321:                 match = re.search(pattern, text, re.IGNORECASE | re.MULTILINE)
+322:                 if match:
+323:                     value = match.group(1).strip() if match.lastindex and match.lastindex >= 1 else match.group(0).strip()
+324:                     # Additional validation
+325:                     if value and len(value) >= 2 and len(value) <= 200:
+326:                         return value
+327:             except Exception as e:
+328:                 continue
+329:         return None
+330:     
+331:     def _parse_decimal(self, raw_value: str) -> Optional[float]:
+332:         """Parse a numeric string into a float, handling common OCR separators."""
+333:         if not raw_value:
+334:             return None
+335: 
+336:         value_str = raw_value.replace(' ', '').replace('O', '0').replace('o', '0')
+337:         value_str = value_str.replace('\u20ac', '').replace('$', '').replace('\xa3', '')
+338:         value_str = re.sub(r'[^0-9\\.,]', '', value_str)
+339: 
+340:         if value_str.count('.') > 1 and value_str.count(',') == 1:
+341:             value_str = value_str.replace('.', '')
+342:         if value_str.count(',') > 1 and value_str.count('.') == 1:
+343:             value_str = value_str.replace(',', '')
+344:         if ',' in value_str and '.' in value_str and value_str.index(',') > value_str.index('.'):
+345:             value_str = value_str.replace(',', '')
+346:         value_str = value_str.replace(',', '.')
+347: 
+348:         try:
+349:             return float(value_str)
+350:         except ValueError:
+351:             return None
+352: 
+353:     def extract_all_prices(self, text: str) -> Tuple[List[float], Optional[float], Optional[float], Optional[float]]:
+354:         """Extract all price-related values from text."""
+355:         prices = []
+356:         price_pattern = r'(?:[\\$\u20ac\xa3]|USD|EUR|GBP|MXN|COP|ARS|CAD|AUD)?\\s*([0-9]{1,3}(?:[.,][0-9]{3})*(?:[.,][0-9]{1,2})?)'
+357:         matches = re.findall(price_pattern, text, re.IGNORECASE)
+358: 
+359:         for match in matches:
+360:             value = self._parse_decimal(match)
+361:             if value is not None and 0 < value < 10000000:
+362:                 prices.append(value)
+363: 
+364:         subtotal = None
+365:         tax = None
+366:         total_amount = None
+367: 
+368:         labeled_patterns = {
+369:             'subtotal': r'(?:Subtotal|Sub-total|Sub Total|SUBTOTAL)[:\\s]*[\\$\u20ac\xa3]?\\s*([\\d,\\.]+)',

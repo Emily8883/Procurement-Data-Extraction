@@ -1,0 +1,17 @@
+300:     def extract_ocr_based(self, pdf_path: Path) -> str:\n
+301:         """Extract text from scanned PDF using OCR with preprocessing and candidate ranking."""\n
+302:         print(f"\\n\U0001f5bc\ufe0f  Processing SCANNED document: {pdf_path.name}")\n
+303: \n
+304:         if not OCR_AVAILABLE:\n
+305:             print("  \u26a0\ufe0f  OCR not available. Please install: pytesseract, pdf2image, Tesseract-OCR")\n
+306:             return ""\n
+307: \n
+308:         try:\n
+309:             ocr_text, extraction_method = self.extract_ocr_candidates(pdf_path)\n
+310:             if not ocr_text.strip() and extraction_method == 'ocr_fallback':\n
+311:                 print("  \u26a0\ufe0f  OCR candidate selection produced empty output")\n
+312:             return ocr_text\n
+313:         except Exception as e:\n
+314:             print(f"  Error during OCR: {e}")\n
+315:             return ""\n
+316:     \n

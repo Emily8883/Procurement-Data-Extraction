@@ -1,0 +1,9 @@
+524:             # Extract text based on document type\n
+525:             if document_type == "scanned":\n
+526:                 extracted_text = self.extract_ocr_based(pdf_path)\n
+527:             else:\n
+528:                 extracted_text = self.extract_text_based(pdf_path)\n
+529:             \n
+530:             if not extracted_text:\n
+531:                 print(f"  \u26a0\ufe0f  No text extracted from {document_name}")\n
+532:                 extracted_text = ""\n

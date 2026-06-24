@@ -1,0 +1,9 @@
+pdfplumber
+pandas
+openpyxl
+rapidfuzz
+scikit-learn
+requests
+beautifulsoup4
+lxml
+tqdm

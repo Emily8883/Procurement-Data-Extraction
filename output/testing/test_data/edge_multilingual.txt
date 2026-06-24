@@ -1,0 +1,13 @@
+
+INVOICE 2024001 / FACTURA 2024001
+
+Date: 2024-06-24 / Fecha: 2024-06-24
+
+Supplier: TechSupply Inc. / Proveedor: TechSupply S.A.
+
+Item Description / Descripción del Artículo: Industrial Component
+Quantity / Cantidad: 100
+Unit Price / Precio Unitario: 25.50 USD
+Total / Total: 2550.00 USD
+
+Vencimiento / Due Date: 2024-07-24

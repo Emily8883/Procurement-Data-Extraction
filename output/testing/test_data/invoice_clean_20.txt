@@ -1,0 +1,14 @@
+
+INVOICE #20240020
+
+Date: 2026-05-28
+Invoice Number: INV-20240020
+
+Supplier: Premium Parts Co.
+
+Description: Industrial Supplies
+Quantity: 40
+Unit Price: 1400.26 USD
+Total Amount: 56010.4 USD
+
+Due Date: 2026-07-24

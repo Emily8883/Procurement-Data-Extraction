@@ -1,0 +1,14 @@
+
+Factura #20240013
+
+Fecha: 2026-06-11
+Número: INV-20240013
+
+Proveedor: Global Materials Ltd.
+
+Descripción: Suministro industrial
+Cantidad: 86
+Precio: 3092.2 EUR
+Total: 265929.2 EUR
+
+Vencimiento: 2026-07-24

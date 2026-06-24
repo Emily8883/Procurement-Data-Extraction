@@ -1,0 +1,14 @@
+
+INVOICE #2O245OO2
+
+Date: 2O26-O6-17
+Invoice Number: INV-2O245OO2
+
+Supplier: Global Materials Ltd.
+
+Description: Industrial Supplies
+Quantity: 55
+Unit Price: 2865.33 GBP
+Total Amount: 157593.15 GBP
+ %%%% @@@
+Due Date: 2O26-O7-24 %%%% @@@

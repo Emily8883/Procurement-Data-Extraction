@@ -1,0 +1,28 @@
+
+TECHNICAL SPECIFICATION SHEET
+
+Document ID: SPEC-0010
+Date: 2026-06-24
+Revision: 1
+
+PRODUCT SPECIFICATIONS
+
+Part Number: PART-76345
+Description: Industrial Component
+Specifications:
+  - Dimensions: 224mm x 300mm
+  - Weight: 1.71 kg
+  - Material: Composite
+  - Temperature Range: -24°C to 117°C
+  - Pressure Rating: 334 PSI
+
+SHIPPING INFORMATION
+
+Weight: 17.72 kg
+Dimensions: 66 x 47 x 69 cm
+Packaging: Standard
+
+SUPPLIER DETAILS
+
+Name: Supplier B
+Lead Time: 56 days

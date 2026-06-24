@@ -1,0 +1,14 @@
+
+Factura #20240001
+
+Fecha: 2026-05-28
+Número: INV-20240001
+
+Proveedor: Premium Parts Co.
+
+Descripción: Suministro industrial
+Cantidad: 19
+Precio: 1307.84 EUR
+Total: 24848.96 EUR
+
+Vencimiento: 2026-07-24

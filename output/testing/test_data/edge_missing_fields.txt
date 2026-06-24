@@ -1,0 +1,6 @@
+
+INVOICE
+Date: 2024-06-24
+Description: Component
+
+Quantity: 50

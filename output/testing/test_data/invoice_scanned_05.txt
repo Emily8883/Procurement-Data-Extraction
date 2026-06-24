@@ -1,0 +1,14 @@
+ %%%% @@@
+INVOICE #20245004
+
+Date: 2026-06-l4 %%%% @@@
+Invoice Number: INV-20245004
+Supplier: Premium Parts Co.
+
+Description: Industrial Supplies
+Quantity: 67 %%%% @@@
+Unit Price: 950.56 EUR %%%% @@@
+Total Amount: 63687.52 EUR
+
+Due Date: 2026-07-24
+ %%%% @@@

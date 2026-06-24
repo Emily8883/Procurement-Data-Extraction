@@ -1,0 +1,14 @@
+
+INVOICE #20240004
+
+Date: 2026-06-19
+Invoice Number: INV-20240004
+
+Supplier: TechSupply Inc.
+
+Description: Industrial Supplies
+Quantity: 100
+Unit Price: 75.73 USD
+Total Amount: 7573.0 USD
+
+Due Date: 2026-07-24

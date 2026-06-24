@@ -1,0 +1,14 @@
+
+Factura #20240017
+
+Fecha: 2026-05-31
+Número: INV-20240017
+
+Proveedor: TechSupply Inc.
+
+Descripción: Suministro industrial
+Cantidad: 59
+Precio: 1407.36 EUR
+Total: 83034.23999999999 EUR
+
+Vencimiento: 2026-07-24

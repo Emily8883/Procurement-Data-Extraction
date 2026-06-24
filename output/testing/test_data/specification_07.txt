@@ -1,0 +1,28 @@
+
+TECHNICAL SPECIFICATION SHEET
+
+Document ID: SPEC-0007
+Date: 2026-06-24
+Revision: 4
+
+PRODUCT SPECIFICATIONS
+
+Part Number: PART-53781
+Description: Industrial Component
+Specifications:
+  - Dimensions: 237mm x 148mm
+  - Weight: 8.39 kg
+  - Material: Composite
+  - Temperature Range: -24°C to 77°C
+  - Pressure Rating: 573 PSI
+
+SHIPPING INFORMATION
+
+Weight: 79.12 kg
+Dimensions: 31 x 48 x 57 cm
+Packaging: Standard
+
+SUPPLIER DETAILS
+
+Name: Supplier C
+Lead Time: 50 days

@@ -1,0 +1,14 @@
+
+INVOICE #20240006
+
+Date: 2026-05-31
+Invoice Number: INV-20240006
+
+Supplier: Premium Parts Co.
+
+Description: Industrial Supplies
+Quantity: 47
+Unit Price: 276.81 GBP
+Total Amount: 13010.07 GBP
+
+Due Date: 2026-07-24

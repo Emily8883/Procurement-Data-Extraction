@@ -17,7 +17,9 @@ import uuid
 
 @dataclass
 class ExecutionLog:
-    """Single document execution log entry"""
+    """Single document execution log entry - Audit Grade"""
+    
+    # Basic identification (required)
     execution_id: str
     document_name: str
     timestamp: str
@@ -28,11 +30,29 @@ class ExecutionLog:
     validation_errors: List[str]
     validation_warnings: List[str]
     processing_time_seconds: float
-    status: str  # SUCCESS, FAILED, WARNING
-    failure_reason: Optional[str] = None
-    failure_details: Optional[str] = None
+    status: str  # SUCCESS, FAILED, WARNING, REQUIRES_REVIEW
+    
+    # Audit trail (optional)
+    input_hash: Optional[str] = None  # SHA256 for file integrity
+    pipeline_version: Optional[str] = None  # Version of pipeline used
+    extraction_method: Optional[str] = None  # text_parser, ocr_extract, etc.
+    
+    # Pipeline routing (optional)
     routing_decision: Optional[str] = None
     routing_confidence: Optional[float] = None
+    
+    # Validation (optional)
+    schema_validation_passed: Optional[bool] = None
+    
+    # Processing status (optional)
+    requires_review: Optional[bool] = None
+    confidence_threshold: Optional[int] = None
+    
+    # Failure details (optional, with stack traces if applicable)
+    failure_reason: Optional[str] = None
+    failure_details: Optional[str] = None  # Full stack trace if exception
+    
+    # Data extraction (optional)
     extracted_fields: Optional[Dict[str, Any]] = None
     metadata: Optional[Dict[str, Any]] = None
 
@@ -100,37 +120,57 @@ class PipelineLogger:
         routing_decision: Optional[str] = None,
         routing_confidence: Optional[float] = None,
         extracted_fields: Optional[Dict] = None,
-        metadata: Optional[Dict] = None
+        metadata: Optional[Dict] = None,
+        input_hash: Optional[str] = None,
+        pipeline_version: Optional[str] = None,
+        extraction_method: Optional[str] = None,
+        schema_validation_passed: Optional[bool] = None,
+        requires_review: Optional[bool] = None,
+        confidence_threshold: Optional[int] = None
     ) -> ExecutionLog:
-        """Log complete execution for a document"""
+        """Log complete execution for a document with audit-grade details"""
         
         log_entry = ExecutionLog(
             execution_id=execution_id,
             document_name=document_name,
             timestamp=datetime.now().isoformat(),
+            input_hash=input_hash,
+            pipeline_version=pipeline_version,
             pipeline_used=pipeline_used,
             document_type=document_type,
+            routing_decision=routing_decision,
+            routing_confidence=routing_confidence,
             extraction_confidence=extraction_confidence,
+            extraction_method=extraction_method,
             validation_result=validation_result,
             validation_errors=validation_errors,
             validation_warnings=validation_warnings,
+            schema_validation_passed=schema_validation_passed,
             processing_time_seconds=processing_time_seconds,
             status=status,
+            requires_review=requires_review,
+            confidence_threshold=confidence_threshold,
             failure_reason=failure_reason,
             failure_details=failure_details,
-            routing_decision=routing_decision,
-            routing_confidence=routing_confidence,
             extracted_fields=extracted_fields,
             metadata=metadata
         )
         
         self.execution_logs.append(log_entry)
         
-        # Log to console
-        status_icon = "✅" if status == "SUCCESS" else "⚠️" if status == "WARNING" else "❌"
+        # Log to console with status
+        status_icon = {
+            "SUCCESS": "✅",
+            "WARNING": "🟡",
+            "FAILED": "❌",
+            "REQUIRES_REVIEW": "🔶"
+        }.get(status, "❓")
+        
+        confidence_str = f"{extraction_confidence:.0f}%"
+        
         self.logger.info(
             f"{status_icon} {document_name}: {pipeline_used} | "
-            f"Confidence: {extraction_confidence:.0f}% | "
+            f"Confidence: {confidence_str} | "
             f"Validation: {validation_result} | "
             f"Time: {processing_time_seconds:.2f}s"
         )
@@ -144,6 +184,12 @@ class PipelineLogger:
         if validation_warnings:
             for warning in validation_warnings:
                 self.logger.warning(f"  🟡 WARNING: {warning}")
+        
+        # Log requires_review flag
+        if requires_review:
+            self.logger.warning(
+                f"  ⚠️  REQUIRES REVIEW: Confidence {confidence_str} below threshold {confidence_threshold}%"
+            )
         
         if failure_reason:
             self.logger.error(f"  Failure: {failure_reason}")

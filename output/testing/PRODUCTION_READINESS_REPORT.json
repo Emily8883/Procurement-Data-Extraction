@@ -1,0 +1,134 @@
+{
+  "metadata": {
+    "report_generated": "2026-06-24T16:31:57.194806",
+    "assessment_date": "2026-06-24 16:31:57",
+    "system_version": "2.0"
+  },
+  "executive_summary": {
+    "total_tests_run": 45,
+    "overall_success_rate_percent": 73.33,
+    "system_stability": "ACCEPTABLE",
+    "batch_processing_capability": "Up to 45 documents",
+    "throughput_docs_per_second": 88.01,
+    "average_processing_time_seconds": 0.0045
+  },
+  "accuracy_metrics": {
+    "overall": {
+      "success_rate_percent": 73.33,
+      "failure_rate_percent": 2.22,
+      "requires_review_rate_percent": 48.89,
+      "average_confidence_score": 57.33,
+      "median_confidence_score": 70.0
+    },
+    "by_document_type": {
+      "clean_invoices": {
+        "success_rate_percent": 100.0,
+        "average_confidence": 100.0,
+        "requires_review_rate_percent": 0.0,
+        "total_files_tested": 20
+      },
+      "scanned_documents": {
+        "success_rate_percent": 0.0,
+        "average_confidence": 38.0,
+        "requires_review_rate_percent": 90.0,
+        "total_files_tested": 10
+      },
+      "specifications": {
+        "success_rate_percent": 100.0,
+        "average_confidence": 0.0,
+        "requires_review_rate_percent": 100.0,
+        "total_files_tested": 10
+      },
+      "edge_cases": {
+        "success_rate_percent": 60.0,
+        "average_confidence": 40.0,
+        "requires_review_rate_percent": 60.0,
+        "total_files_tested": 5
+      }
+    }
+  },
+  "performance_metrics": {
+    "batch_processing": {
+      "total_documents": 45,
+      "successfully_processed": 45,
+      "processing_errors": 0,
+      "total_time_seconds": 0.51,
+      "average_time_per_document_seconds": 0.0114,
+      "throughput_documents_per_second": 88.01,
+      "success_rate_percent": 100.0
+    },
+    "resource_usage": {
+      "memory_start_mb": 22.23,
+      "memory_end_mb": 22.25,
+      "memory_delta_mb": 0.02,
+      "average_memory_percent": 0.14,
+      "peak_memory_percent": 0.14,
+      "average_cpu_percent": 0.0,
+      "peak_cpu_percent": 0.0
+    }
+  },
+  "reliability_assessment": {
+    "overall_reliability_score": 88.89,
+    "reliability_level": "HIGH",
+    "failure_rate_percent": 2.22,
+    "graceful_degradation_capability": 80.0,
+    "batch_processing_resilience": "\u2713 Partial failures don't stop processing",
+    "error_recovery": "\u2713 Implemented with retry and fallback"
+  },
+  "failure_analysis": {
+    "total_failures": 1,
+    "failure_categories": {
+      "null": {
+        "count": 1,
+        "example_files": [
+          "edge_minimal.txt"
+        ]
+      }
+    },
+    "most_common_failure": "null"
+  },
+  "risk_assessment": {
+    "total_risks_identified": 2,
+    "risks": [
+      {
+        "category": "LOW ACCURACY",
+        "severity": "HIGH",
+        "description": "Overall success rate is 73.33% (target: >90%)",
+        "mitigation": "Enable confidence thresholding for manual review of low-confidence documents"
+      },
+      {
+        "category": "HIGH REVIEW RATE",
+        "severity": "MEDIUM",
+        "description": "Requires manual review: 48.89% of documents",
+        "mitigation": "Consider adjusting confidence threshold or improving extraction method"
+      }
+    ]
+  },
+  "recommendations": {
+    "deployment_blockers": [
+      "\u274c DO NOT DEPLOY: Success rate below 90% threshold"
+    ],
+    "conditional_items": [
+      "\u26a0 Review confidence thresholding strategy"
+    ],
+    "approved_items": [
+      "\u2713 Performance is acceptable for production use",
+      "\u2713 Memory usage is within normal parameters",
+      "\u2713 Implement comprehensive logging for production audit trails",
+      "\u2713 Set up monitoring for extraction confidence scores",
+      "\u2713 Configure automated alerts for failures > 5%",
+      "\u2713 Establish SLA for manual review queue",
+      "\u2713 Regular benchmarking to catch performance regressions"
+    ]
+  },
+  "production_readiness_verdict": {
+    "verdict": "NOT_READY",
+    "rationale": "Critical quality metrics below production thresholds",
+    "success_rate_percent": 73.33,
+    "failure_rate_percent": 2.22,
+    "reliability_level": "HIGH",
+    "critical_issues": 1,
+    "assessment_date": "2026-06-24T16:31:57.207684",
+    "valid_for_days": 30
+  }
+}

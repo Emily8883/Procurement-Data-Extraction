@@ -1,0 +1,13 @@
+
+INVOICE #2O245OO5
+
+Date: 2O26-O6-13
+Invoice Number: INV-2O245OO5
+ %%%% @@@
+Supplier: Industrial Solutions Corp.
+
+Description: Industrial Supplies
+Quantity: 74
+Unit Price: 951.45 GBP
+Total Amount: 7O4O7.3 GBP
+Due Date: 2O26-O7-24 %%%% @@@

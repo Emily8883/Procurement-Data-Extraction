@@ -1,0 +1,28 @@
+
+TECHNICAL SPECIFICATION SHEET
+
+Document ID: SPEC-0002
+Date: 2026-06-24
+Revision: 4
+
+PRODUCT SPECIFICATIONS
+
+Part Number: PART-94961
+Description: Industrial Component
+Specifications:
+  - Dimensions: 355mm x 204mm
+  - Weight: 38.59 kg
+  - Material: Composite
+  - Temperature Range: -9°C to 61°C
+  - Pressure Rating: 753 PSI
+
+SHIPPING INFORMATION
+
+Weight: 97.65 kg
+Dimensions: 69 x 65 x 58 cm
+Packaging: Standard
+
+SUPPLIER DETAILS
+
+Name: Supplier C
+Lead Time: 15 days

@@ -1,0 +1,28 @@
+
+TECHNICAL SPECIFICATION SHEET
+
+Document ID: SPEC-0009
+Date: 2026-06-24
+Revision: 1
+
+PRODUCT SPECIFICATIONS
+
+Part Number: PART-13380
+Description: Industrial Component
+Specifications:
+  - Dimensions: 467mm x 289mm
+  - Weight: 21.70 kg
+  - Material: Steel
+  - Temperature Range: -11°C to 148°C
+  - Pressure Rating: 352 PSI
+
+SHIPPING INFORMATION
+
+Weight: 3.70 kg
+Dimensions: 20 x 93 x 90 cm
+Packaging: Standard
+
+SUPPLIER DETAILS
+
+Name: Supplier A
+Lead Time: 24 days

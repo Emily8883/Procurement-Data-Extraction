@@ -1,0 +1,14 @@
+
+INVOICE #20240015
+
+Date: 2026-06-01
+Invoice Number: INV-20240015
+
+Supplier: Global Materials Ltd.
+
+Description: Industrial Supplies
+Quantity: 58
+Unit Price: 4639.86 USD
+Total Amount: 269111.88 USD
+
+Due Date: 2026-07-24

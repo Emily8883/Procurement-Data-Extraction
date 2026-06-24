@@ -1,0 +1,28 @@
+
+TECHNICAL SPECIFICATION SHEET
+
+Document ID: SPEC-0005
+Date: 2026-06-24
+Revision: 4
+
+PRODUCT SPECIFICATIONS
+
+Part Number: PART-96459
+Description: Industrial Component
+Specifications:
+  - Dimensions: 289mm x 252mm
+  - Weight: 19.92 kg
+  - Material: Stainless Steel
+  - Temperature Range: -33°C to 110°C
+  - Pressure Rating: 113 PSI
+
+SHIPPING INFORMATION
+
+Weight: 18.52 kg
+Dimensions: 60 x 49 x 95 cm
+Packaging: Standard
+
+SUPPLIER DETAILS
+
+Name: Supplier C
+Lead Time: 70 days

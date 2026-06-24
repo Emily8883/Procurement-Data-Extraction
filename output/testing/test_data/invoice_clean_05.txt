@@ -1,0 +1,14 @@
+
+Factura #20240005
+
+Fecha: 2026-06-05
+Número: INV-20240005
+
+Proveedor: Global Materials Ltd.
+
+Descripción: Suministro industrial
+Cantidad: 37
+Precio: 4877.09 USD
+Total: 180452.33000000002 USD
+
+Vencimiento: 2026-07-24

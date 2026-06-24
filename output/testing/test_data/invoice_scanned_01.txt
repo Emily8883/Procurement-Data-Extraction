@@ -1,0 +1,12 @@
+
+ %%%% @@@
+Date: 2O26-O6-16
+lnvoice Number: lNV-2O245OOO
+
+Supplier: TechSupply lnc.
+
+Description: lndustrial Supplies
+Unit Price: 188.91 USD
+Total Amount: 3O22.56 USD
+
+Due Date: 2O26-O7-24

@@ -1,0 +1,14 @@
+
+INVOICE #2O245OO6
+
+Date: 2O26-O5-27 %%%% @@@
+Invoice Number: INV-2O245OO6
+
+Supplier: TechSupply Inc. %%%% @@@
+
+Description: Industrial Supplies
+Quantity: l7 %%%% @@@
+Unit Price: 3O47.76 EUR
+Total Amount: 5l8ll.92OOOOOOOOO6 EUR
+
+Due Date: 2O26-O7-24

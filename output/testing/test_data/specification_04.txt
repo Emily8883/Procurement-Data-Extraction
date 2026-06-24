@@ -1,0 +1,28 @@
+
+TECHNICAL SPECIFICATION SHEET
+
+Document ID: SPEC-0004
+Date: 2026-06-24
+Revision: 3
+
+PRODUCT SPECIFICATIONS
+
+Part Number: PART-76456
+Description: Industrial Component
+Specifications:
+  - Dimensions: 149mm x 289mm
+  - Weight: 31.18 kg
+  - Material: Stainless Steel
+  - Temperature Range: -8°C to 135°C
+  - Pressure Rating: 113 PSI
+
+SHIPPING INFORMATION
+
+Weight: 53.08 kg
+Dimensions: 30 x 30 x 36 cm
+Packaging: Standard
+
+SUPPLIER DETAILS
+
+Name: Supplier A
+Lead Time: 74 days

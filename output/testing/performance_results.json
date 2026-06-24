@@ -1,0 +1,32 @@
+{
+  "test_metadata": {
+    "timestamp": "2026-06-24T16:31:56.674734",
+    "test_type": "batch_performance"
+  },
+  "batch_metrics": {
+    "total_files": 45,
+    "successfully_processed": 45,
+    "errors": 0,
+    "success_rate": 100.0,
+    "total_time_seconds": 0.51,
+    "average_time_per_document_seconds": 0.0114,
+    "throughput_documents_per_second": 88.01,
+    "memory_start_mb": 22.23,
+    "memory_end_mb": 22.25,
+    "memory_delta_mb": 0.02
+  },
+  "memory_profile": {
+    "average_percent": 0.14,
+    "peak_percent": 0.14,
+    "min_percent": 0.14,
+    "stdev": 0
+  },
+  "cpu_profile": {
+    "average_percent": 0.0,
+    "peak_percent": 0.0,
+    "min_percent": 0.0,
+    "stdev": 0
+  },
+  "throughput_metrics": {},
+  "resource_usage": {}
+}

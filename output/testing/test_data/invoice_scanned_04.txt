@@ -1,0 +1,12 @@
+
+lNVOlCE #20245003
+ %%%% @@@
+Date: 2026-06-04
+lnvoice Number: lNV-20245003
+Supplier: lndustrial Solutions Corp.
+
+Description: lndustrial Supplies
+Quantity: 1
+Total Amount: 32B9.03 GBP
+
+Due Date: 2026-07-24

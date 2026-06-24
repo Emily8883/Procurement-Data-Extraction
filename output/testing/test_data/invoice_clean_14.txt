@@ -1,0 +1,14 @@
+
+INVOICE #20240014
+
+Date: 2026-06-09
+Invoice Number: INV-20240014
+
+Supplier: Industrial Solutions Corp.
+
+Description: Industrial Supplies
+Quantity: 76
+Unit Price: 98.65 EUR
+Total Amount: 7497.400000000001 EUR
+
+Due Date: 2026-07-24

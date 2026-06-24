@@ -1,0 +1,14 @@
+
+Factura #20240009
+
+Fecha: 2026-06-06
+Número: INV-20240009
+
+Proveedor: TechSupply Inc.
+
+Descripción: Suministro industrial
+Cantidad: 59
+Precio: 3500.64 GBP
+Total: 206537.75999999998 GBP
+
+Vencimiento: 2026-07-24

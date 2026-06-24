@@ -64,21 +64,66 @@ class DeterministicPipeline:
     
     def process_documents(self, pdf_paths: List[str]) -> Dict[str, Any]:
         """
-        Process multiple documents through deterministic pipeline
+        Process multiple documents through deterministic pipeline.
+        
+        Batch processing safety: Partial failures do NOT stop processing.
+        Each document is an independent transaction.
         
         Args:
             pdf_paths: List of PDF file paths
         
         Returns:
-            Dictionary with results grouped by pipeline type
+            Dictionary with results grouped by pipeline type and status
         """
         print(f"\n{'='*80}")
-        print("DETERMINISTIC PROCUREMENT EXTRACTION PIPELINE")
+        print("DETERMINISTIC PROCUREMENT EXTRACTION PIPELINE v2.0")
+        print("With Schema Validation, Failure Recovery, and Audit Logging")
         print(f"{'='*80}\n")
         print(f"Processing {len(pdf_paths)} document(s)\n")
+        print("⚠️  NOTE: Batch processing will continue even if individual documents fail")
+        print("   Each document is processed as an independent transaction\n")
         
-        for pdf_path in pdf_paths:
-            self.process_single_document(pdf_path)
+        successful_count = 0
+        failed_count = 0
+        requires_review_count = 0
+        
+        for idx, pdf_path in enumerate(pdf_paths, 1):
+            try:
+                result = self.process_single_document(pdf_path)
+                
+                # Track result status
+                if result.get('status') == 'FAILED':
+                    failed_count += 1
+                elif result.get('requires_review'):
+                    requires_review_count += 1
+                else:
+                    successful_count += 1
+                    
+            except Exception as e:
+                # Catch ANY exception and log it - do not stop batch
+                print(f"\n❌ BATCH ERROR [{idx}/{len(pdf_paths)}]: {pdf_path}")
+                print(f"   Exception: {type(e).__name__}: {str(e)}")
+                failed_count += 1
+                
+                # Still log the error for audit trail
+                if hasattr(self, 'logger'):
+                    try:
+                        self.logger.log_execution(
+                            execution_id=self.logger.log_document_start(Path(pdf_path).name),
+                            document_name=Path(pdf_path).name,
+                            pipeline_used='UNKNOWN',
+                            document_type='UNKNOWN',
+                            extraction_confidence=0,
+                            validation_result='FAIL',
+                            validation_errors=[str(e)],
+                            validation_warnings=[],
+                            processing_time_seconds=0,
+                            status='FAILED',
+                            failure_reason=f'Batch Processing Exception: {type(e).__name__}',
+                            failure_details=str(e)
+                        )
+                    except:
+                        pass  # If logging itself fails, continue
         
         # Generate and save execution log
         execution_log_path = self.logger.save_execution_log()
@@ -87,23 +132,38 @@ class DeterministicPipeline:
         # Generate summary report
         summary = self._generate_summary()
         summary['execution_log_file'] = str(execution_log_path)
+        summary['batch_processing_safety'] = {
+            'successful': successful_count,
+            'failed': failed_count,
+            'requires_review': requires_review_count,
+            'total_attempted': len(pdf_paths),
+            'partial_failure_note': 'Batch completed with partial failures (not stopped by individual failures)'
+        }
         
         return summary
     
     def process_single_document(self, pdf_path: str) -> Dict[str, Any]:
         """
-        Process single document through deterministic pipeline
+        Process single document through deterministic pipeline.
+        
+        Independent transaction: failure does not affect other documents.
         
         Args:
             pdf_path: Path to PDF file
         
         Returns:
-            Processing result dictionary
+            Processing result dictionary with audit trail
         """
         pdf_path = Path(pdf_path)
         execution_id = self.logger.log_document_start(pdf_path.name)
         
+        result = None
+        
         try:
+            # Validate file exists
+            if not pdf_path.exists():
+                raise FileNotFoundError(f"PDF file not found: {pdf_path}")
+            
             # Stage 1: Route document
             routing_decision, routing_confidence = self.router.route_document(str(pdf_path))
             
@@ -113,10 +173,26 @@ class DeterministicPipeline:
             else:
                 pipeline = self.specification_pipeline
             
-            # Stage 2: Process document
+            # Stage 2: Process document (includes validation and schema checking)
             result = pipeline.process_document(str(pdf_path))
             
-            # Stage 3: Log execution
+            # Check requires_review status
+            requires_review = result.get('requires_review', False)
+            confidence = result.get('extraction_confidence', 0)
+            
+            if requires_review:
+                print(f"⚠️  [{routing_decision.upper()}] {pdf_path.name}")
+                print(f"   Confidence: {confidence:.0f}% (below threshold {self.procurement_pipeline.confidence_threshold}%)")
+                print(f"   Status: {result.get('status')} - REQUIRES MANUAL REVIEW")
+            else:
+                status_emoji = {
+                    'SUCCESS': '✅',
+                    'WARNING': '🟡',
+                    'FAILED': '❌'
+                }.get(result.get('status'), '❓')
+                print(f"{status_emoji} [{routing_decision.upper()}] {pdf_path.name} | Confidence: {confidence:.0f}% | {result.get('status')}")
+            
+            # Stage 3: Log execution with full audit details
             self.logger.log_execution(
                 execution_id=execution_id,
                 document_name=pdf_path.name,
@@ -133,19 +209,34 @@ class DeterministicPipeline:
                 routing_decision=routing_decision,
                 routing_confidence=routing_confidence,
                 extracted_fields=result.get('extracted_data'),
+                input_hash=result.get('input_hash'),
+                pipeline_version=result.get('pipeline_version'),
+                extraction_method=result.get('extraction_method'),
+                schema_validation_passed=result.get('schema_validation_passed'),
+                requires_review=requires_review,
+                confidence_threshold=pipeline.confidence_threshold,
                 metadata={
                     'routing_confidence': routing_confidence,
-                    'enforcement_mode': pipeline.get_enforcement_mode()
+                    'enforcement_mode': pipeline.get_enforcement_mode(),
+                    'input_hash': result.get('input_hash'),
+                    'pipeline_version': result.get('pipeline_version'),
+                    'extraction_method': result.get('extraction_method'),
+                    'schema_validation_passed': result.get('schema_validation_passed'),
+                    'requires_review': requires_review,
+                    'confidence_threshold': pipeline.confidence_threshold
                 }
             )
             
-            # Store results by pipeline type
+            # Store results by routing decision and status
             self.results[routing_decision].append(result)
             
             return result
             
-        except Exception as e:
-            # Log execution error
+        except FileNotFoundError as e:
+            # File not found - log and continue
+            error_msg = f'File not found: {str(e)}'
+            print(f"❌ [UNKNOWN] {pdf_path.name} - {error_msg}")
+            
             self.logger.log_execution(
                 execution_id=execution_id,
                 document_name=pdf_path.name,
@@ -153,18 +244,47 @@ class DeterministicPipeline:
                 document_type='UNKNOWN',
                 extraction_confidence=0,
                 validation_result='FAIL',
-                validation_errors=[str(e)],
+                validation_errors=[error_msg],
                 validation_warnings=[],
                 processing_time_seconds=0,
                 status='FAILED',
-                failure_reason=f'Exception: {str(e)}',
-                failure_details=str(e)
+                failure_reason=error_msg,
+                failure_details=error_msg
             )
             
             return {
                 'document_name': pdf_path.name,
                 'status': 'FAILED',
-                'error': str(e)
+                'failure_reason': error_msg,
+                'requires_review': True
+            }
+            
+        except Exception as e:
+            # Any other exception - log and continue (batch safety)
+            import traceback
+            error_msg = f'Exception: {type(e).__name__}: {str(e)}'
+            print(f"❌ [UNKNOWN] {pdf_path.name} - {error_msg}")
+            
+            self.logger.log_execution(
+                execution_id=execution_id,
+                document_name=pdf_path.name,
+                pipeline_used='UNKNOWN',
+                document_type='UNKNOWN',
+                extraction_confidence=0,
+                validation_result='FAIL',
+                validation_errors=[error_msg],
+                validation_warnings=[],
+                processing_time_seconds=0,
+                status='FAILED',
+                failure_reason=f'Unexpected Exception: {type(e).__name__}',
+                failure_details=traceback.format_exc()
+            )
+            
+            return {
+                'document_name': pdf_path.name,
+                'status': 'FAILED',
+                'failure_reason': error_msg,
+                'requires_review': True
             }
     
     def _generate_summary(self) -> Dict[str, Any]:

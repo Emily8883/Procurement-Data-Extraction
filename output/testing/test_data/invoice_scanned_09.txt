@@ -1,0 +1,13 @@
+lNVOlCE #2024500B
+
+Date: 2026-06-22
+lnvoice Number: lNV-2024500B
+
+Supplier: Global Materials Ltd.
+
+Description: lndustrial Supplies
+Quantity: 99 %%%% @@@
+Unit Price: 4097.2 EUR
+Total Amount: 405622.B EUR
+
+Due Date: 2026-07-24 %%%% @@@
